@@ -1,2 +1,6 @@
 build/
 .DS_Store
+*.zip
+data/
+.vscode/
+ProjetM1RF2026.pdf

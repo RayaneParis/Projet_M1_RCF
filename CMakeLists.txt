@@ -4,5 +4,6 @@ project(projet_M1_RCF LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(projet_M1_RCF src/main.cpp)
+file(GLOB SOURCES src/*.cpp)
+add_executable(projet_M1_RCF ${SOURCES})
 target_include_directories(projet_M1_RCF PRIVATE include)
