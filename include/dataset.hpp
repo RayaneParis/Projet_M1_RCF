@@ -1,3 +1,5 @@
+// rayane
+
 #pragma once 
 #include <map>
 #include <string>
@@ -5,9 +7,9 @@
 
 struct Sample {
     std::string name;
-    int label;                                                  // class label
-    int index;                                                  // index of the sample in the dataset
-    std::map<std::string, std::vector<double>> features;        // method -> vector of features
+    int label; // Class label
+    int index; // Index of the sample in the dataset
+    std::map<std::string, std::vector<double>> features; // method -> vector of features
 };
 
 // Get the names of all methods in the dataset

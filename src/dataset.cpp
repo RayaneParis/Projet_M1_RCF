@@ -1,3 +1,4 @@
+// rayane 
 #include "dataset.hpp"
 
 #include <algorithm>
@@ -14,7 +15,7 @@ const std::vector<std::string>& methodNames() {
     return names;
 }
 
-// Read a vector of doubles from a text file
+// read vector 
 static std::vector<double> readVector(const fs::path& file) {
     std::ifstream in(file);
     std::vector<double> v;
@@ -35,8 +36,16 @@ static bool validName(const std::string& s) {
 std::vector<Sample> loadDataset(const std::string& root, int maxClasses) {
     std::map<std::string, Sample> byName; // map from sample name to Sample object
 
+    // try the normal layout first; otherwise use '=' for every dataset folder
+    fs::path datasetRoot = root;
+    std::string prefix;
+    if (!fs::is_directory(datasetRoot)) {
+        prefix = "=";
+        datasetRoot = datasetRoot.parent_path() / (prefix + datasetRoot.filename().string());
+    }
+
     for (const auto& method : methodNames()) {
-        fs::path dir = fs::path(root) / "Signatures" / method;
+        fs::path dir = datasetRoot / (prefix + "Signatures") / (prefix + method);
         if (!fs::exists(dir)) {
             std::cerr << "Warning: directory not found: " << dir << "\n";
             continue;
@@ -63,7 +72,7 @@ std::vector<Sample> loadDataset(const std::string& root, int maxClasses) {
     std::vector<Sample> samples;
     for (auto& [name, s] : byName) samples.push_back(std::move(s));
 
-    // Check for missing features
+    // check for missing features
     for (const auto& s : samples) 
         for (const auto& m : methodNames())
             if (!s.features.count(m) || s.features.at(m).empty())
