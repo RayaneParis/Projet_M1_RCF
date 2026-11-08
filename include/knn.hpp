@@ -1,8 +1,9 @@
-// mehdi aghaei - knn
+// mehdi aghaei & rayane - knn
 
 #pragma once
 
 #include "dataset.hpp"
+#include "distance.hpp"
 
 // predict the class of a sample using its knn
 //so the class with the most votes wins
@@ -11,4 +12,5 @@
 int predictKNN(const std::vector<Sample>& training,
                const std::vector<double>& query,
                const std::string& method,
-               int k);
+               int k,
+               DistanceType type = DistanceType::Euclidean);
