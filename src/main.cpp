@@ -8,6 +8,7 @@
 #include <vector>
 #include "dataset.hpp"
 #include "knn.hpp"
+#include "kmeans.hpp"
 
 int main() {
     auto data = loadDataset("data/SharvitB2", 6);
@@ -81,6 +82,57 @@ int main() {
         }
     } catch (const std::exception& error) {
         std::cerr << "prediction failed: " << error.what() << "\n";
+        return 1;
+    }
+
+    try {
+        std::cout << "k-means (K = 6, best SSE over 20 initializations)\n";
+        for (const auto& method : methodNames()) {
+            KMeansResult best = kmeans(data, method, 6, 0);
+            for (unsigned seed = 1; seed < 20; ++seed) {
+                KMeansResult r = kmeans(data, method, 6, seed);
+                if (r.sse < best.sse) best = r;
+            }
+            std::cout << method
+                      << " | SSE: " <<best.sse
+                      << " | iterators: " << best.iterators
+                      << " | recognition rate: " << clusterRecognitionRate(data, best, 6) << "%\n";
+        }
+    } catch (const std::exception& error) {
+        std::cerr << "k-means failed: " <<error.what() << "\n";
+        return 1;
+    }
+
+    try {
+        // Test 1 
+        std::cout << "k-means stability (K = 6, 20 seeds)\n";
+        for (const auto& method : methodNames()) {
+            double minRate = 100.0, maxRate = 0.0, sumRate = 0.0;
+            double minSse = 1e300, maxSse = 0.0;
+            for (unsigned seed = 0; seed < 20; ++seed) {
+                KMeansResult r = kmeans(data, method, 6, seed);
+                double rate = clusterRecognitionRate(data, r, 6);
+                minRate = std::min(minRate, rate);
+                maxRate = std::max(maxRate, rate);
+                sumRate += rate;
+                minSse = std::min(minSse, r.sse);
+                maxSse = std::max(maxSse, r.sse);
+            }
+            std::cout << method
+                     << " | rate min/mean/max: " << minRate << " / " << sumRate / 20
+                     << " / " << maxRate
+                     << " | SSE min/max: " << minSse << " / " << maxSse << "\n";
+        } 
+        // Test 2
+        KMeansResult one = kmeans(data, "ART", 1, 0);
+        std::cout << "K = 1 -> " << clusterRecognitionRate(data, one, 1)
+                                 << "% (should be 16.6667%)\n";
+        KMeansResult all = kmeans(data, "ART", 72, 0);
+        std::cout << "K = 72 -> " << clusterRecognitionRate(data, all, 72)
+                                 << "% (should be 100%)\n";
+                                 
+    } catch (const std::exception& error) {
+        std::cerr << "k-means stability test failed: " << error.what() << "\n";
         return 1;
     }
 }
