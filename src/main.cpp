@@ -1,5 +1,5 @@
 // Mehdi and Rayane
-
+#include <algorithm>
 #include <cstddef>
 #include <exception>
 #include <iostream>
@@ -11,7 +11,12 @@
 #include "kmeans.hpp"
 #include "vote.hpp"
 
+static void printSection(const std::string& title) {
+    std::cout << "\n======================= " << title << " =======================\n";
+}
+
 int main() {
+    // Load the dataset
     auto data = loadDataset("data/SharvitB2", 6);
     std::cout << data.size() << " samples loaded\n";
 
@@ -52,9 +57,9 @@ int main() {
         std::cerr << "leave-one-out evaluation with k = 5 requires at least six samples\n";
         return 1;
     }
-
+    // 2.a. k-NN classification (leave-one-out)
     try {
-        std::cout << "leave-one-out evaluation (6 classes)\n";
+        printSection("2.a. k-NN classification (leave-one-out)");
 
         for (const auto& method : methodNames()) {
             for (DistanceType type : {DistanceType::Euclidean, DistanceType::Manhattan}) {
@@ -86,9 +91,10 @@ int main() {
         return 1;
     }
 
-    // K-means clustering (2.b)
+    // 2.b. K-means clustering 
     try {
-        std::cout << "k-means (K = 6, best SSE over 20 initializations)\n";
+        printSection("2.b. K-means clustering (K = 6, best SSE over 20 initializations)");
+
         for (const auto& method : methodNames()) {
             KMeansResult best = kmeans(data, method, 6, 0);
             for (unsigned seed = 1; seed < 20; ++seed) {
@@ -107,7 +113,8 @@ int main() {
 
     try {
         // Test 1 
-        std::cout << "k-means stability (K = 6, 20 seeds)\n";
+        printSection("2.b. K-means clustering stability (K = 6, 20 seeds)");
+        
         for (const auto& method : methodNames()) {
             double minRate = 100.0, maxRate = 0.0, sumRate = 0.0;
             double minSse = 1e300, maxSse = 0.0;
@@ -137,11 +144,12 @@ int main() {
         std::cerr << "k-means stability test failed: " << error.what() << "\n";
         return 1;
     }
-    // Majority vote (2.c)
+    // 2.c. Majority vote 
     try {
+        printSection("2.c. Majority vote (leave-one-out)");
+
         const std::vector<std::string> priority = {"ART", "GFD", "Zernike7", "Yang", "SA"};
 
-        std::cout << "Majority vote (leave-one-out)\n";
         for (DistanceType type : {DistanceType::Euclidean, DistanceType::Manhattan})
             for (int k : {1, 3, 5, 7, 9})
                 std::cout << "vote | " 
