@@ -9,6 +9,7 @@
 #include "dataset.hpp"
 #include "knn.hpp"
 #include "kmeans.hpp"
+#include "vote.hpp"
 
 int main() {
     auto data = loadDataset("data/SharvitB2", 6);
@@ -85,6 +86,7 @@ int main() {
         return 1;
     }
 
+    // K-means clustering (2.b)
     try {
         std::cout << "k-means (K = 6, best SSE over 20 initializations)\n";
         for (const auto& method : methodNames()) {
@@ -130,9 +132,25 @@ int main() {
         KMeansResult all = kmeans(data, "ART", 72, 0);
         std::cout << "K = 72 -> " << clusterRecognitionRate(data, all, 72)
                                  << "% (should be 100%)\n";
-                                 
+
     } catch (const std::exception& error) {
         std::cerr << "k-means stability test failed: " << error.what() << "\n";
+        return 1;
+    }
+    // Majority vote (2.c)
+    try {
+        const std::vector<std::string> priority = {"ART", "GFD", "Zernike7", "Yang", "SA"};
+
+        std::cout << "Majority vote (leave-one-out)\n";
+        for (DistanceType type : {DistanceType::Euclidean, DistanceType::Manhattan})
+            for (int k : {1, 3, 5, 7, 9})
+                std::cout << "vote | " 
+                          << (type == DistanceType::Euclidean ? "L2" : "L1")
+                          << " | k: " << k
+                          << " | recognition rate: "
+                          << leaveOneOutVote(data, priority, k, type) << "%\n";
+    } catch (const std::exception& error) {
+        std::cerr << "majority vote failed: " << error.what() << "\n";
         return 1;
     }
 }
