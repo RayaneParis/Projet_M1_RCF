@@ -13,7 +13,8 @@
 int predictKNN(const std::vector<Sample>& training,
                const std::vector<double>& query,
                const std::string& method,
-               int k) {
+               int k,
+               DistanceType type) {
     if (training.empty() || query.empty()) {
         throw std::invalid_argument("k-NN requires training samples and a nonempty query");
     }
@@ -30,7 +31,7 @@ int predictKNN(const std::vector<Sample>& training,
             throw std::invalid_argument(sample.name + ": missing descriptor " + method);
         }
 
-        double distance = euclideanDistance(query, it->second);
+        double distance = computeDistance(query, it->second, type);
         if (!std::isfinite(distance)) {
             throw std::invalid_argument("k-NN requires finite distances");
         }
