@@ -1,7 +1,6 @@
 // mehdi - knn
 
 #include "knn.hpp"
-#include "distance.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -10,11 +9,13 @@
 #include <stdexcept>
 #include <utility>
 
-int predictKNN(const std::vector<Sample>& training,
-               const std::vector<double>& query,
-               const std::string& method,
-               int k,
-               DistanceType type) {
+#include "distance.hpp"
+
+static bool closer(const std::pair<double, int>& a, const std::pair<double, int>& b) {
+    return a.first < b.first;
+}
+int predictKNN(const std::vector<Sample>& training, const std::vector<double>& query,
+               const std::string& method, int k, DistanceType type) {
     if (training.empty() || query.empty()) {
         throw std::invalid_argument("k-NN requires training samples and a nonempty query");
     }
@@ -39,8 +40,7 @@ int predictKNN(const std::vector<Sample>& training,
     }
 
     // sort from closest to farthest and keep the original order if distances are equal
-    std::stable_sort(neighbors.begin(), neighbors.end(),
-                     [](const auto& a, const auto& b) { return a.first < b.first; });
+    std::stable_sort(neighbors.begin(), neighbors.end(), closer);
 
     std::map<int, int> votes;
     for (int i = 0; i < k; ++i) {

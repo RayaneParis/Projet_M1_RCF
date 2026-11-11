@@ -1,11 +1,13 @@
-// rayane 
+// rayane
 #include "dataset.hpp"
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 
 namespace fs = std::filesystem;
 
@@ -15,26 +17,42 @@ const std::vector<std::string>& methodNames() {
     return names;
 }
 
-// read vector 
+// read vector
 static std::vector<double> readVector(const fs::path& file) {
-    std::ifstream in(file);
-    std::vector<double> v;
-    double x;
-    while (in >> x) v.push_back(x);
-    return v;
+    std::ifstream input(file);
+    if (!input) {
+        throw std::runtime_error("cannot open " + file.string());
+    }
+    std::vector<double> values;
+    double number;
+    while (input >> number) {
+        if (!std::isfinite(number)) {
+            throw std::runtime_error("invalid number in " + file.string());
+        }
+        values.push_back(number);
+    }
+    if (!input.eof() || values.empty()) {
+        throw std::runtime_error("invalid descriptor " + file.string());
+    }
+    return values;
 }
 
-// Check if a sample name is valid 
-static bool validName(const std::string& s) {
-    if (s.size() != 7 || s[0] != 's' || s[3] != 'n') return false;
-    for (int i : {1, 2, 4, 5, 6})
-        if (!std::isdigit(static_cast<unsigned char>(s[i]))) return false;
+// check if a sample name is valid
+static bool validName(const std::string& name) {
+    if (name.size() != 7) return false;
+    if (name[0] != 's' || name[3] != 'n') return false;
+
+    for (int i = 0; i < 7; i++) {
+        if (i != 0 && i != 3) {
+            if (name[i] < '0' || name[i] > '9') return false;
+        }
+    }
     return true;
 }
 
 // Load dataset from a directory
 std::vector<Sample> loadDataset(const std::string& root, int maxClasses) {
-    std::map<std::string, Sample> byName; // map from sample name to Sample object
+    std::map<std::string, Sample> byName;  // map from sample name to Sample object
 
     // try the normal layout first; otherwise use '=' for every dataset folder
     fs::path datasetRoot = root;
@@ -49,7 +67,7 @@ std::vector<Sample> loadDataset(const std::string& root, int maxClasses) {
         if (!fs::exists(dir)) {
             std::cerr << "Warning: directory not found: " << dir << "\n";
             continue;
-        }   
+        }
         for (const auto& entry : fs::directory_iterator(dir)) {
             if (!entry.is_regular_file()) continue;
 
@@ -61,8 +79,8 @@ std::vector<Sample> loadDataset(const std::string& root, int maxClasses) {
             int label = std::stoi(stem.substr(1, 2));
             if (label > maxClasses) continue;
 
-            Sample& s = byName[stem];                           
-            s.name = stem;                      
+            Sample& s = byName[stem];
+            s.name = stem;
             s.label = label;
             s.index = std::stoi(stem.substr(4, 3));
             s.features[method] = readVector(entry.path());
@@ -73,11 +91,10 @@ std::vector<Sample> loadDataset(const std::string& root, int maxClasses) {
     for (auto& [name, s] : byName) samples.push_back(std::move(s));
 
     // check for missing features
-    for (const auto& s : samples) 
+    for (const auto& s : samples)
         for (const auto& m : methodNames())
             if (!s.features.count(m) || s.features.at(m).empty())
                 std::cerr << "Warning: " << s.name << " without descriptor " << m << "\n";
 
     return samples;
 }
-

@@ -6,10 +6,13 @@
 #include <map>
 #include <string>
 #include <vector>
+
 #include "dataset.hpp"
-#include "knn.hpp"
 #include "kmeans.hpp"
+#include "knn.hpp"
 #include "vote.hpp"
+
+#include <stdexcept>
 
 static void printSection(const std::string& title) {
     std::cout << "\n======================= " << title << " =======================\n";
@@ -20,15 +23,13 @@ int main() {
     auto data = loadDataset("data/SharvitB2", 6);
     std::cout << data.size() << " samples loaded\n";
 
-    if (data.empty()) {std::cerr << "no samples found!!!\n"; return 1; } // check if the dataset is empty and print an error message
+    if (data.empty()) {
+        std::cerr << "no samples found!!!\n";
+        return 1;
+    }  // check if the dataset is empty and print an error message
 
     const std::map<std::string, std::size_t> expectedDimensions = {
-        {"ART", 36},
-        {"GFD", 100},
-        {"SA", 20},
-        {"Yang", 29},
-        {"Zernike7", 18}
-    };
+        {"ART", 36}, {"GFD", 100}, {"SA", 20}, {"Yang", 29}, {"Zernike7", 18}};
 
     bool valid = true;
 
@@ -41,8 +42,7 @@ int main() {
                 std::cerr << sample.name << ": missing " << method << "\n";
                 valid = false;
             } else if (it->second.size() != expected) {
-                std::cerr << sample.name << ": " << method
-                          << " has " << it->second.size()
+                std::cerr << sample.name << ": " << method << " has " << it->second.size()
                           << " values; expected " << expected << "\n";
                 valid = false;
             }
@@ -67,22 +67,21 @@ int main() {
                     std::size_t correct = 0;
 
                     for (std::size_t i = 0; i < data.size(); ++i) {
-                        //hold out sample i; all other samples form the training set.
+                        // hold out sample i; all other samples form the training set.
                         std::vector<Sample> training;
                         for (std::size_t j = 0; j < data.size(); ++j) {
                             if (j != i) training.push_back(data[j]);
                         }
 
-                        int prediction = predictKNN(training, data[i].features.at(method), method, k, type);
+                        int prediction =
+                            predictKNN(training, data[i].features.at(method), method, k, type);
                         if (prediction == data[i].label) ++correct;
                     }
 
                     double rate = 100.0 * correct / data.size();
-                    std::cout << method 
-                            << " | " << (type == DistanceType::Euclidean ? "L2" : "L1")
-                            << " | k: " << k
-                            << " | correct: " << correct << "/" << data.size()
-                            << " | recognition rate: " << rate << "%\n";
+                    std::cout << method << " | " << (type == DistanceType::Euclidean ? "L2" : "L1")
+                              << " | k: " << k << " | correct: " << correct << "/" << data.size()
+                              << " | recognition rate: " << rate << "%\n";
                 }
             }
         }
@@ -91,7 +90,7 @@ int main() {
         return 1;
     }
 
-    // 2.b. K-means clustering 
+    // 2.b. K-means clustering
     try {
         printSection("2.b. K-means clustering (K = 6, best SSE over 20 initializations)");
 
@@ -101,20 +100,18 @@ int main() {
                 KMeansResult r = kmeans(data, method, 6, seed);
                 if (r.sse < best.sse) best = r;
             }
-            std::cout << method
-                      << " | SSE: " <<best.sse
-                      << " | iterators: " << best.iterators
+            std::cout << method << " | SSE: " << best.sse << " | iterators: " << best.iterators
                       << " | recognition rate: " << clusterRecognitionRate(data, best, 6) << "%\n";
         }
     } catch (const std::exception& error) {
-        std::cerr << "k-means failed: " <<error.what() << "\n";
+        std::cerr << "k-means failed: " << error.what() << "\n";
         return 1;
     }
 
     try {
-        // Test 1 
+        // Test 1
         printSection("2.b. K-means clustering stability (K = 6, 20 seeds)");
-        
+
         for (const auto& method : methodNames()) {
             double minRate = 100.0, maxRate = 0.0, sumRate = 0.0;
             double minSse = 1e300, maxSse = 0.0;
@@ -127,24 +124,23 @@ int main() {
                 minSse = std::min(minSse, r.sse);
                 maxSse = std::max(maxSse, r.sse);
             }
-            std::cout << method
-                     << " | rate min/mean/max: " << minRate << " / " << sumRate / 20
-                     << " / " << maxRate
-                     << " | SSE min/max: " << minSse << " / " << maxSse << "\n";
-        } 
+            std::cout << method << " | rate min/mean/max: " << minRate << " / " << sumRate / 20
+                      << " / " << maxRate << " | SSE min/max: " << minSse << " / " << maxSse
+                      << "\n";
+        }
         // Test 2
         KMeansResult one = kmeans(data, "ART", 1, 0);
         std::cout << "K = 1 -> " << clusterRecognitionRate(data, one, 1)
-                                 << "% (should be 16.6667%)\n";
+                  << "% (should be 16.6667%)\n";
         KMeansResult all = kmeans(data, "ART", 72, 0);
         std::cout << "K = 72 -> " << clusterRecognitionRate(data, all, 72)
-                                 << "% (should be 100%)\n";
+                  << "% (should be 100%)\n";
 
     } catch (const std::exception& error) {
         std::cerr << "k-means stability test failed: " << error.what() << "\n";
         return 1;
     }
-    // 2.c. Majority vote 
+    // 2.c. Majority vote
     try {
         printSection("2.c. Majority vote (leave-one-out)");
 
@@ -152,11 +148,10 @@ int main() {
 
         for (DistanceType type : {DistanceType::Euclidean, DistanceType::Manhattan})
             for (int k : {1, 3, 5, 7, 9})
-                std::cout << "vote | " 
-                          << (type == DistanceType::Euclidean ? "L2" : "L1")
+                std::cout << "vote | " << (type == DistanceType::Euclidean ? "L2" : "L1")
                           << " | k: " << k
-                          << " | recognition rate: "
-                          << leaveOneOutVote(data, priority, k, type) << "%\n";
+                          << " | recognition rate: " << leaveOneOutVote(data, priority, k, type)
+                          << "%\n";
     } catch (const std::exception& error) {
         std::cerr << "majority vote failed: " << error.what() << "\n";
         return 1;

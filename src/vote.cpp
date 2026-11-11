@@ -1,35 +1,47 @@
-// Rayane 2.c vote majoritaire
+// Rayane vote majoritaire
+// refactored and commented by Mehdi
+
+// majority voting decision: each descriptor has already predicted a class using knn.
+// the votes map stores how many times each class was predicted.
+// then we choose the class with the highest number of votes and if two classes have the same number
+// of votes, we keep the class that appears first in predictions.
+
 #include "vote.hpp"
-#include "knn.hpp"
 
 #include <algorithm>
 #include <map>
 #include <stdexcept>
 
+#include "knn.hpp"
+
+// obtain the five predictions and count them, then choose the winner -> predicts the class of one
+// image
 int predictVote(const std::vector<Sample>& training, const Sample& query,
                 const std::vector<std::string>& methods, int k, DistanceType type) {
-            if (methods.empty()) 
-                throw std::invalid_argument("vote requires at least one method");
+    if (methods.empty()) throw std::invalid_argument("no voting methods");
 
-            std::vector<int> predictions;
-            std::map<int, int> votes;
-            for (const auto& m : methods) {
-                int p = predictKNN(training, query.features.at(m), m, k, type);
-                predictions.push_back(p);
-                ++votes[p];
-            }
+    std::vector<int> predictions;
+    std::map<int, int> votes;
+    for (const std::string& method : methods) {
+        int label = predictKNN(training, query.features.at(method), method, k, type);
+        predictions.push_back(label);
+        votes[label]++;
+    }
 
-            int maxVotes = 0;
-            for (const auto& [label, v] : votes) maxVotes = std::max(maxVotes, v);
-
-            for (int p : predictions)
-                if (votes[p] == maxVotes) return p;
-            return predictions.front(); // fallback 
+    int winner = predictions[0];
+    int mostVotes = 0;
+    for (int label : predictions) {
+        if (votes[label] > mostVotes) {
+            mostVotes = votes[label];
+            winner = label;
+        }
+    }
+    return winner;
 }
 
-double leaveOneOutVote(const std::vector<Sample>& data,
-                        const std::vector<std::string>& methods, 
-                        int k, DistanceType type) {
+// leaveOneOut evaluates how accurately predictVote() works on the whole dataset
+double leaveOneOutVote(const std::vector<Sample>& data, const std::vector<std::string>& methods,
+                       int k, DistanceType type) {
     std::size_t correct = 0;
     for (std::size_t i = 0; i < data.size(); ++i) {
         std::vector<Sample> training;
