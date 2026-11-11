@@ -10,6 +10,7 @@
 #include "dataset.hpp"
 #include "kmeans.hpp"
 #include "knn.hpp"
+#include "svm.hpp"
 #include "vote.hpp"
 
 const std::vector<int> neighborCounts = {1, 3, 5, 7, 9};
@@ -95,6 +96,26 @@ static void runVoting(const std::vector<Sample>& data) {
     }
 }
 
+static void runSVM(const std::vector<Sample>& data) {
+    printSection("2.d. SVM classification (leave-one-out)");
+
+    for (const auto& method : methodNames()) {
+        std::size_t correct = 0;
+        for (std::size_t i = 0; i < data.size(); ++i) {
+            // train on all samples except the one being tested
+            std::vector<Sample> training = data;
+            training.erase(training.begin() + i);
+
+            int prediction = predictSVM(training, data[i].features.at(method), method);
+            if (prediction == data[i].label) ++correct;
+        }
+
+        double rate = 100.0 * correct / data.size();
+        std::cout << method << " | SVM RBF | correct: " << correct << "/" << data.size()
+                  << " | recognition rate: " << rate << "%\n";
+    }
+}
+
 int main() {
     try {
         std::vector<Sample> data = loadDataset("data/SharvitB2", 6);
@@ -108,6 +129,7 @@ int main() {
         runKNN(data);
         runKMeans(data);
         runVoting(data);
+        runSVM(data);
     } catch (const std::exception& error) {
         std::cerr << "experiment failed: " << error.what() << "\n";
         return 1;
