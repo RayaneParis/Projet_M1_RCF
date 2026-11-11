@@ -8,14 +8,11 @@
 
 #include "vote.hpp"
 
-#include <algorithm>
 #include <map>
 #include <stdexcept>
 
 #include "knn.hpp"
 
-// obtain the five predictions and count them, then choose the winner -> predicts the class of one
-// image
 int predictVote(const std::vector<Sample>& training, const Sample& query,
                 const std::vector<std::string>& methods, int k, DistanceType type) {
     if (methods.empty()) throw std::invalid_argument("no voting methods");
@@ -25,28 +22,30 @@ int predictVote(const std::vector<Sample>& training, const Sample& query,
     for (const std::string& method : methods) {
         int label = predictKNN(training, query.features.at(method), method, k, type);
         predictions.push_back(label);
-        votes[label]++;
+        ++votes[label];
     }
 
-    int winner = predictions[0];
-    int mostVotes = 0;
+    // keep the earlier method's prediction when vote counts are equal
+    int winner = predictions.front();
     for (int label : predictions) {
-        if (votes[label] > mostVotes) {
-            mostVotes = votes[label];
+        if (votes[label] > votes[winner]) {
             winner = label;
         }
     }
     return winner;
 }
 
-// leaveOneOut evaluates how accurately predictVote() works on the whole dataset
 double leaveOneOutVote(const std::vector<Sample>& data, const std::vector<std::string>& methods,
                        int k, DistanceType type) {
+    if (data.size() < 2) {
+        throw std::invalid_argument("leave-one-out requires at least two samples");
+    }
+
     std::size_t correct = 0;
     for (std::size_t i = 0; i < data.size(); ++i) {
-        std::vector<Sample> training;
-        for (std::size_t j = 0; j < data.size(); ++j)
-            if (j != i) training.push_back(data[j]);
+        // remove only the held-out sample and preserve the training order
+        std::vector<Sample> training = data;
+        training.erase(training.begin() + i);
 
         if (predictVote(training, data[i], methods, k, type) == data[i].label) ++correct;
     }

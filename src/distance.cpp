@@ -1,4 +1,4 @@
-// Mehdi & Rayane - euclidean/manhattan distance
+// mehdi & rayane
 
 #include "distance.hpp"
 
@@ -21,10 +21,14 @@ double euclideanDistance(const std::vector<double>& a, const std::vector<double>
 }
 
 double manhattanDistance(const std::vector<double>& a, const std::vector<double>& b) {
-    if (a.size() != b.size())
+    if (a.size() != b.size()) {
         throw std::invalid_argument("manhattan distance requires equal length vectors");
+    }
+
     double sum = 0.0;
-    for (std::size_t i = 0; i < a.size(); ++i) sum += std::abs(a[i] - b[i]);
+    for (std::size_t i = 0; i < a.size(); ++i) {
+        sum += std::abs(a[i] - b[i]);
+    }
     return sum;
 }
 
