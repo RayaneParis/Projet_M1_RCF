@@ -1,7 +1,6 @@
 // mehdi - knn
 
 #include "knn.hpp"
-#include "distance.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -10,11 +9,12 @@
 #include <stdexcept>
 #include <utility>
 
-int predictKNN(const std::vector<Sample>& training,
-               const std::vector<double>& query,
-               const std::string& method,
-               int k,
-               DistanceType type) {
+static bool closer(const std::pair<double, int>& a, const std::pair<double, int>& b) {
+    return a.first < b.first;
+}
+
+int predictKNN(const std::vector<Sample>& training, const std::vector<double>& query,
+               const std::string& method, int k, DistanceType type) {
     if (training.empty() || query.empty()) {
         throw std::invalid_argument("k-NN requires training samples and a nonempty query");
     }
@@ -24,39 +24,36 @@ int predictKNN(const std::vector<Sample>& training,
 
     // store the distance and class label of each sample
     std::vector<std::pair<double, int>> neighbors;
+    neighbors.reserve(training.size());
 
     for (const auto& sample : training) {
-        auto it = sample.features.find(method);
-        if (it == sample.features.end()) {
+        auto feature = sample.features.find(method);
+        if (feature == sample.features.end()) {
             throw std::invalid_argument(sample.name + ": missing descriptor " + method);
         }
 
-        double distance = computeDistance(query, it->second, type);
+        double distance = computeDistance(query, feature->second, type);
         if (!std::isfinite(distance)) {
             throw std::invalid_argument("k-NN requires finite distances");
         }
         neighbors.push_back({distance, sample.label});
     }
 
-    // sort from closest to farthest and keep the original order if distances are equal
-    std::stable_sort(neighbors.begin(), neighbors.end(),
-                     [](const auto& a, const auto& b) { return a.first < b.first; });
+    // preserve training order when distances are equal
+    std::stable_sort(neighbors.begin(), neighbors.end(), closer);
 
     std::map<int, int> votes;
     for (int i = 0; i < k; ++i) {
         ++votes[neighbors[i].second];
     }
 
-    // choose the class with the most votes
-    // if votes are equal, choose the class with the closest sample
-    int predictedLabel = neighbors.front().second;
-    int bestVotes = 0;
+    // the first tied class is the one with the closest neighbor
+    int winner = neighbors.front().second;
     for (int i = 0; i < k; ++i) {
         int label = neighbors[i].second;
-        if (votes[label] > bestVotes) {
-            bestVotes = votes[label];
-            predictedLabel = label;
+        if (votes[label] > votes[winner]) {
+            winner = label;
         }
     }
-    return predictedLabel;
+    return winner;
 }

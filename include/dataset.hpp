@@ -1,19 +1,19 @@
 // rayane
 
-#pragma once 
+#pragma once
+
 #include <map>
 #include <string>
 #include <vector>
 
 struct Sample {
     std::string name;
-    int label; // Class label
-    int index; // Index of the sample in the dataset
-    std::map<std::string, std::vector<double>> features; // method -> vector of features
+    int label;
+    int index;  // sample number within its class
+    std::map<std::string, std::vector<double>> features;
 };
 
-// Get the names of all methods in the dataset
 const std::vector<std::string>& methodNames();
 
-// Load dataset 
+// reject empty data, missing descriptors and incorrect dimensions
 std::vector<Sample> loadDataset(const std::string& root, int maxClasses = 18);
