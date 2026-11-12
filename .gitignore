@@ -4,4 +4,5 @@ build/
 data/
 .vscode/
 ProjetM1RF2026.pdf
-docs/
+docs/*
+!docs/*.pdf
