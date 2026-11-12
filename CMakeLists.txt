@@ -9,3 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 file(GLOB SOURCES src/*.cpp)
 add_executable(projet_M1_RCF ${SOURCES})
 target_include_directories(projet_M1_RCF PRIVATE include)
+
+find_package(OpenCV REQUIRED COMPONENTS core ml)
+target_link_libraries(projet_M1_RCF PRIVATE ${OpenCV_LIBS})
+target_include_directories(projet_M1_RCF PRIVATE include ${OpenCV_INCLUDE_DIRS})

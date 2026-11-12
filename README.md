@@ -6,10 +6,12 @@ Mehdi AGHAEI and Rayane Khatim
 We compare different shape recognition methods using the **SharvitB2 dataset**, which contains 18 classes with 12 samples each.
 
 The project is implemented in **C++17** and includes:
-- k-Nearest Neighbors (k-NN)
-- k-Means Clustering
-- Majority Voting across five feature descriptors
-- Support Vector Machine (SVM)
+- euclidean (L2) distance - complete implementation
+- manhattan (L1) distance - complete implementation
+- k-Nearest Neighbors (k-NN) - complete implementation
+- k-Means Clustering - complete implementation
+- Majority Voting across five feature descriptors - complete implementation
+- Support Vector Machine (SVM, RBF kernel) | OpenCV (`cv::ml::SVM`) 
 
 ## Dataset
 
@@ -23,17 +25,28 @@ data/SharvitB2/
 
 The program also supports `data/=SharvitB2/` with the corresponding prefixed subfolders.
 
+## Requirements
+ 
+- A C++17 compiler (GCC, Clang or MSVC)
+- CMake 3.16 or newer
+- OpenCV 4 (modules `core` and `ml`), used only for the SVM
+```bash
+# macOS
+brew install cmake opencv
+ 
+# Ubuntu / Debian
+sudo apt install build-essential cmake libopencv-dev
+```
+ 
 ## Build and Run
-
+ 
 From the repository root:
-
+ 
 ```bash
 cmake -S . -B build
 cmake --build build
 ./build/projet_M1_RCF
 ```
-
-Requires a C++17-compatible compiler and CMake.
 
 ## Project Structure
 
