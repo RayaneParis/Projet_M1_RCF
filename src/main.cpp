@@ -12,6 +12,7 @@
 #include "knn.hpp"
 #include "svm.hpp"
 #include "vote.hpp"
+#include "evaluation.hpp"
 
 const std::vector<int> neighborCounts = {1, 3, 5, 7, 9};
 
@@ -116,6 +117,57 @@ static void runSVM(const std::vector<Sample>& data) {
     }
 }
 
+static void evaluateKnn(const std::vector<Sample>& data, const std::string& method, int k) {
+    std::cout << "\n--- k-NN | " << method << " | L2 | k = " << k << " ---\n";
+
+    std::vector<int> truth, predicted;
+    for (std::size_t i = 0; i < data.size(); ++i) {
+        std::vector<Sample> training;
+        for (std::size_t j = 0; j < data.size(); ++j)
+            if (j != i) training.push_back(data[j]);
+
+        truth.push_back(data[i].label);
+        predicted.push_back(predictKNN(training, data[i].features.at(method), method, k, DistanceType::Euclidean));
+
+    }
+    printReport(evaluate(truth, predicted, 6));
+}
+
+static void evaluateVote(const std::vector<Sample>& data, int k) {
+    std::cout << "\n--- Majority vote | L2 | k = " << k << " ---\n";
+    const std::vector<std::string> priority = {"ART", "GFD", "Zernike7", "Yang", "SA"};
+
+    std::vector<int> truth, predicted;
+    for (std::size_t i = 0; i < data.size(); ++i) {
+        std::vector<Sample> training;
+        for (std::size_t j = 0; j < data.size(); ++j)
+            if (j != i) training.push_back(data[j]);
+
+        truth.push_back(data[i].label);
+        predicted.push_back(predictVote(training, data[i], priority, k, DistanceType::Euclidean));
+    }
+    printReport(evaluate(truth, predicted, 6));
+}
+
+static void runEvaluation(const std::vector<Sample>& data) {
+    printSection("3.b. Evaluation metrics: confusion matrix, precision, recall, F1-score");
+
+    evaluateKnn(data, "SA", 3); 
+    evaluateKnn(data, "ART", 5);
+    evaluateVote(data, 9);
+
+    std::vector<int> truth, predicted;
+    for (std::size_t i = 0; i < data.size(); ++i) {
+        std::vector<Sample> training;
+        for (std::size_t j = 0; j < data.size(); ++j)
+            if (j != i) training.push_back(data[j]);
+
+        truth.push_back(data[i].label);
+        predicted.push_back(predictKNN(training, data[i].features.at("SA"), "SA", 3, DistanceType::Euclidean));
+
+    }
+}
+
 int main() {
     try {
         std::vector<Sample> data = loadDataset("data/SharvitB2", 6);
@@ -130,6 +182,8 @@ int main() {
         runKMeans(data);
         runVoting(data);
         runSVM(data);
+        runEvaluation(data);
+
     } catch (const std::exception& error) {
         std::cerr << "experiment failed: " << error.what() << "\n";
         return 1;
