@@ -6,6 +6,9 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <fstream>
+#include <iomanip>
+#include <filesystem>
 
 #include "dataset.hpp"
 #include "kmeans.hpp"
@@ -13,6 +16,7 @@
 #include "svm.hpp"
 #include "vote.hpp"
 #include "evaluation.hpp"
+#include "curve.hpp"
 
 const std::vector<int> neighborCounts = {1, 3, 5, 7, 9};
 
@@ -168,6 +172,40 @@ static void runEvaluation(const std::vector<Sample>& data) {
     }
 }
 
+static void printCurve(const std::string& name, const PRCurve& curve, std::ofstream& csv) {
+    std::cout << "\n--- " << name << " | K = 12 | AUC = " << curve.auc << " ---\n";
+    std::cout << "rank | recall | precision\n";
+    for (const auto& p : curve.points) {
+        std::cout << std::setw(4) << p.rank << " | " << std::fixed << std::setprecision(3)
+                  << std::setw(6) << p.recall << " | " << std::setw(9) << p.precision << "\n";
+        std::cout.unsetf(std::ios::floatfield);
+        csv << name << "," << p.rank << "," << p.recall << "," << p.precision << "\n";
+    }
+}
+
+static void runPrecisionRecall(const std::vector<Sample>& data) {
+    printSection("3.c. Precision/Recall curves (K=12, L2)");
+
+    const int K = 12;
+    std::filesystem::create_directories("results");
+    std::ofstream csv("results/curves.csv");
+    if (!csv) {
+        std::cerr << "cannot open results/curves.csv\n";
+        return;
+    }
+    csv << "approach,rank,recall,precision\n";
+
+    for (const auto& method : methodNames())
+        printCurve("k-NN " + method,
+                   precisionRecallCurve(data, method, DistanceType::Euclidean, K), csv);
+    
+    const std::vector<std::string> priority = {"ART", "GFD", "Zernike7", "Yang", "SA"};
+    printCurve("Majority Vote",
+              precisionRecallCurveVote(data, priority, DistanceType::Euclidean, K), csv);
+}
+
+
+
 int main() {
     try {
         std::vector<Sample> data = loadDataset("data/SharvitB2", 6);
@@ -183,6 +221,7 @@ int main() {
         runVoting(data);
         runSVM(data);
         runEvaluation(data);
+        runPrecisionRecall(data);
 
     } catch (const std::exception& error) {
         std::cerr << "experiment failed: " << error.what() << "\n";
