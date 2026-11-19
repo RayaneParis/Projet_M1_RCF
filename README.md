@@ -21,8 +21,8 @@ Partie du projet	                                                    État
 3.a. Protocole LOO	                                                    Implemented
 3.b. Métriques d'évaluation	                                            Implemented
 3.c. Précision/rappel et AUC	                                        Implemented
-4. Étude expérimentale	                                            À reprendre méthodiquement
-5. Conclusion et perspectives	                                    À rédiger à partir des résultats
+4. Étude expérimentale	                                                Done
+5. Conclusion et perspectives	                                        Done
 ```
 
 ## Dataset
