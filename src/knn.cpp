@@ -1,11 +1,11 @@
 // mehdi - knn
 
 #include "knn.hpp"
+#include "vote.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <map>
 #include <stdexcept>
 #include <utility>
 
@@ -13,8 +13,9 @@ static bool closer(const std::pair<double, int>& a, const std::pair<double, int>
     return a.first < b.first;
 }
 
-int predictKNN(const std::vector<Sample>& training, const std::vector<double>& query,
-               const std::string& method, int k, DistanceType type) {
+std::vector<int> nearestNeighborLabels(const std::vector<Sample>& training,
+                                       const std::vector<double>& query,
+                                       const std::string& method, int k, DistanceType type) {
     if (training.empty() || query.empty()) {
         throw std::invalid_argument("k-NN requires training samples and a nonempty query");
     }
@@ -42,18 +43,15 @@ int predictKNN(const std::vector<Sample>& training, const std::vector<double>& q
     // preserve training order when distances are equal
     std::stable_sort(neighbors.begin(), neighbors.end(), closer);
 
-    std::map<int, int> votes;
+    std::vector<int> labels;
+    labels.reserve(k);
     for (int i = 0; i < k; ++i) {
-        ++votes[neighbors[i].second];
+        labels.push_back(neighbors[i].second);
     }
+    return labels;
+}
 
-    // the first tied class is the one with the closest neighbor
-    int winner = neighbors.front().second;
-    for (int i = 0; i < k; ++i) {
-        int label = neighbors[i].second;
-        if (votes[label] > votes[winner]) {
-            winner = label;
-        }
-    }
-    return winner;
+int predictKNN(const std::vector<Sample>& training, const std::vector<double>& query,
+               const std::string& method, int k, DistanceType type) {
+    return majorityVote(nearestNeighborLabels(training, query, method, k, type));
 }

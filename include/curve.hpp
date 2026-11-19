@@ -1,15 +1,13 @@
-// Rayane 3.c Curve precision/recall
+// Rayane — classification precision/recall
 #pragma once
 
-#include <string>
+#include <optional>
 #include <vector>
-#include "dataset.hpp"
-#include "distance.hpp"
 
 struct PRPoint {
-    int rank = 0;
-    double recall = 0.0;
-    double precision = 0.0;
+    std::optional<double> threshold;  // Empty at the starting point (no positive predictions).
+    double recall;
+    double precision;
 };
 
 struct PRCurve {
@@ -17,13 +15,6 @@ struct PRCurve {
     double auc = 0.0;
 };
 
-// 2.a 
-PRCurve precisionRecallCurve(const std::vector<Sample>& data, 
-                             const std::string& method, 
-                             DistanceType type, int K);
-
-// 2.c 
-PRCurve precisionRecallCurveVote(const std::vector<Sample>& data, 
-                                 const std::vector<std::string>& methods, 
-                                 DistanceType type, int K);
-
+// One-vs-rest curve. Each held-out image scores a class by the fraction of its votes for it.
+PRCurve precisionRecallCurve(const std::vector<int>& truth,
+                            const std::vector<std::vector<int>>& votes, int positiveClass);

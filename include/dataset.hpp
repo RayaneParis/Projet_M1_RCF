@@ -9,7 +9,6 @@
 struct Sample {
     std::string name;
     int label;
-    int index;  // sample number within its class
     std::map<std::string, std::vector<double>> features;
 };
 

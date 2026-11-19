@@ -3,7 +3,6 @@
 #include "kmeans.hpp"
 
 #include <algorithm>
-#include <map>
 #include <numeric>
 #include <random>
 #include <stdexcept>
@@ -92,33 +91,4 @@ KMeansResult kmeans(const std::vector<Sample>& data, const std::string& method, 
         result.sse += distance * distance;
     }
     return result;
-}
-
-double clusterRecognitionRate(const std::vector<Sample>& data, const KMeansResult& result, int K) {
-    if (data.empty() || K < 1 || result.assignment.size() != data.size()) {
-        throw std::invalid_argument(
-            "cluster purity requires data, clusters and one assignment per sample");
-    }
-
-    std::vector<std::map<int, int>> counts(K);
-    for (std::size_t i = 0; i < data.size(); ++i) {
-        int cluster = result.assignment[i];
-        if (cluster < 0 || cluster >= K) {
-            throw std::invalid_argument("cluster assignment is out of range");
-        }
-        ++counts[cluster][data[i].label];
-    }
-
-    std::size_t correct = 0;
-
-    // count the majority class in each cluster
-    for (const auto& cluster : counts) {
-        int best = 0;
-        for (const auto& entry : cluster) {
-            best = std::max(best, entry.second);
-        }
-        correct += best;
-    }
-
-    return 100.0 * correct / data.size();
 }

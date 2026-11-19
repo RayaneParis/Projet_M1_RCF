@@ -6,12 +6,22 @@ Mehdi AGHAEI and Rayane Khatim
 We compare different shape recognition methods using the **SharvitB2 dataset**, which contains 18 classes with 12 samples each.
 
 The project is implemented in **C++17** and includes:
-- euclidean (L2) distance - complete implementation
-- manhattan (L1) distance - complete implementation
-- k-Nearest Neighbors (k-NN) - complete implementation
-- k-Means Clustering - complete implementation
-- Majority Voting across five feature descriptors - complete implementation
-- Support Vector Machine (SVM, RBF kernel) | OpenCV (`cv::ml::SVM`) 
+
+Partie du projet	                                                    État
+1. Lecture des données	                                                Implémentée
+2. 
+    - euclidean (L2) distance                                           Implémentée
+    - manhattan (L1) distance                                           Implémentée
+2.a. k-Nearest Neighbors (k-NN)	                                        Implémenté
+2.b. k-Means Clustering	                                                Implémenté
+2.c. Majority Voting across five feature descriptors	                Implémenté
+2.d. Support Vector Machine (SVM, RBF kernel) | OpenCV (`cv::ml::SVM`) 	Implémenté
+3. tests et evaluation:
+3.a. Protocole LOO	                                                    Implémenté
+3.b. Métriques d'évaluation	                                            Implémentées
+3.c. Précision/rappel et AUC	            Calculs implémentés, graphiques à vérifier
+4. Étude expérimentale	                                    À reprendre méthodiquement
+5. Conclusion et perspectives	                        À rédiger à partir des résultats
 
 ## Dataset
 
