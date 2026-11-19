@@ -254,6 +254,6 @@ void runExperiments(const std::vector<Sample>& data) {
     // runKMeans(data);
     const PredictionsBySetting voting = runVoting(knn);
     // runSVM(data);
-    runEvaluation(knn, voting);
+    // runEvaluation(knn, voting);
     // runPrecisionRecall(data);
 }

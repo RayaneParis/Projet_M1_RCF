@@ -1,0 +1,66 @@
+144 samples loaded
+all samples have the expected descriptor dimensions
+
+======================= 2.a. k-NN classification (leave-one-out) =======================
+ART | L2 | k: 1 | correct: 140/144 | recognition rate: 97.2222%
+ART | L2 | k: 3 | correct: 136/144 | recognition rate: 94.4444%
+ART | L2 | k: 5 | correct: 137/144 | recognition rate: 95.1389%
+ART | L2 | k: 7 | correct: 135/144 | recognition rate: 93.75%
+ART | L2 | k: 9 | correct: 134/144 | recognition rate: 93.0556%
+ART | L1 | k: 1 | correct: 140/144 | recognition rate: 97.2222%
+ART | L1 | k: 3 | correct: 138/144 | recognition rate: 95.8333%
+ART | L1 | k: 5 | correct: 139/144 | recognition rate: 96.5278%
+ART | L1 | k: 7 | correct: 137/144 | recognition rate: 95.1389%
+ART | L1 | k: 9 | correct: 136/144 | recognition rate: 94.4444%
+GFD | L2 | k: 1 | correct: 140/144 | recognition rate: 97.2222%
+GFD | L2 | k: 3 | correct: 138/144 | recognition rate: 95.8333%
+GFD | L2 | k: 5 | correct: 138/144 | recognition rate: 95.8333%
+GFD | L2 | k: 7 | correct: 136/144 | recognition rate: 94.4444%
+GFD | L2 | k: 9 | correct: 134/144 | recognition rate: 93.0556%
+GFD | L1 | k: 1 | correct: 137/144 | recognition rate: 95.1389%
+GFD | L1 | k: 3 | correct: 139/144 | recognition rate: 96.5278%
+GFD | L1 | k: 5 | correct: 138/144 | recognition rate: 95.8333%
+GFD | L1 | k: 7 | correct: 136/144 | recognition rate: 94.4444%
+GFD | L1 | k: 9 | correct: 131/144 | recognition rate: 90.9722%
+SA | L2 | k: 1 | correct: 111/144 | recognition rate: 77.0833%
+SA | L2 | k: 3 | correct: 107/144 | recognition rate: 74.3056%
+SA | L2 | k: 5 | correct: 103/144 | recognition rate: 71.5278%
+SA | L2 | k: 7 | correct: 103/144 | recognition rate: 71.5278%
+SA | L2 | k: 9 | correct: 102/144 | recognition rate: 70.8333%
+SA | L1 | k: 1 | correct: 109/144 | recognition rate: 75.6944%
+SA | L1 | k: 3 | correct: 103/144 | recognition rate: 71.5278%
+SA | L1 | k: 5 | correct: 102/144 | recognition rate: 70.8333%
+SA | L1 | k: 7 | correct: 99/144 | recognition rate: 68.75%
+SA | L1 | k: 9 | correct: 98/144 | recognition rate: 68.0556%
+Yang | L2 | k: 1 | correct: 128/144 | recognition rate: 88.8889%
+Yang | L2 | k: 3 | correct: 129/144 | recognition rate: 89.5833%
+Yang | L2 | k: 5 | correct: 125/144 | recognition rate: 86.8056%
+Yang | L2 | k: 7 | correct: 123/144 | recognition rate: 85.4167%
+Yang | L2 | k: 9 | correct: 116/144 | recognition rate: 80.5556%
+Yang | L1 | k: 1 | correct: 129/144 | recognition rate: 89.5833%
+Yang | L1 | k: 3 | correct: 131/144 | recognition rate: 90.9722%
+Yang | L1 | k: 5 | correct: 127/144 | recognition rate: 88.1944%
+Yang | L1 | k: 7 | correct: 126/144 | recognition rate: 87.5%
+Yang | L1 | k: 9 | correct: 121/144 | recognition rate: 84.0278%
+Zernike7 | L2 | k: 1 | correct: 138/144 | recognition rate: 95.8333%
+Zernike7 | L2 | k: 3 | correct: 140/144 | recognition rate: 97.2222%
+Zernike7 | L2 | k: 5 | correct: 137/144 | recognition rate: 95.1389%
+Zernike7 | L2 | k: 7 | correct: 133/144 | recognition rate: 92.3611%
+Zernike7 | L2 | k: 9 | correct: 130/144 | recognition rate: 90.2778%
+Zernike7 | L1 | k: 1 | correct: 140/144 | recognition rate: 97.2222%
+Zernike7 | L1 | k: 3 | correct: 139/144 | recognition rate: 96.5278%
+Zernike7 | L1 | k: 5 | correct: 137/144 | recognition rate: 95.1389%
+Zernike7 | L1 | k: 7 | correct: 130/144 | recognition rate: 90.2778%
+Zernike7 | L1 | k: 9 | correct: 128/144 | recognition rate: 88.8889%
+
+======================= 2.c. Majority vote (leave-one-out) =======================
+vote | L2 | k: 1 | recognition rate: 97.2222%
+vote | L2 | k: 3 | recognition rate: 97.2222%
+vote | L2 | k: 5 | recognition rate: 97.2222%
+vote | L2 | k: 7 | recognition rate: 97.2222%
+vote | L2 | k: 9 | recognition rate: 95.1389%
+vote | L1 | k: 1 | recognition rate: 97.2222%
+vote | L1 | k: 3 | recognition rate: 97.9167%
+vote | L1 | k: 5 | recognition rate: 97.2222%
+vote | L1 | k: 7 | recognition rate: 96.5278%
+vote | L1 | k: 9 | recognition rate: 93.75%
