@@ -2,7 +2,7 @@
 
 #include "dataset.hpp"
 
-// The main experiments use the first six classes of SharvitB2.
-inline constexpr int experimentClassCount = 6;
+// experiment 1: take the first 6 classes only
+inline constexpr int experimentClassCount = 18;
 
 void runExperiments(const std::vector<Sample>& data);

@@ -31,11 +31,24 @@ using KnnPredictions = std::map<std::string, PredictionsBySetting>;
 void printSection(const std::string& title) {
     std::cout << "\n======================= " << title << " =======================\n";
 }
-
+// testing all 5 descriptors with L1 and L2 and k= 1,3,5,7,9
+// it uses leaveOneOut() for the predictions and classificationAccuracy() to calculate the
+// recognition rate
 KnnPredictions runKNN(const std::vector<Sample>& data) {
     printSection("2.a. k-NN classification (leave-one-out)");
 
     KnnPredictions results;
+
+    std::filesystem::create_directories("results");
+
+    std::ofstream csv("results/experiment1_knn_6classes.csv");
+
+    if (!csv) {
+        throw std::runtime_error("Cannot create experiment CSV");
+    }
+
+    csv << "descriptor,distance,k,correct,total,recognition_rate_percent\n";
+
     for (const auto& method : methodNames()) {
         for (DistanceType type : {DistanceType::Euclidean, DistanceType::Manhattan}) {
             for (int k : neighborCounts) {
@@ -44,9 +57,14 @@ KnnPredictions runKNN(const std::vector<Sample>& data) {
                     return predictKNN(training, query.features.at(method), method, k, type);
                 });
                 const Accuracy accuracy = classificationAccuracy(result.truth, result.predicted);
+
+                csv << method << "," << (type == DistanceType::Euclidean ? "L2" : "L1") << "," << k
+                    << "," << accuracy.correct << "," << data.size() << "," << std::fixed
+                    << std::setprecision(4) << accuracy.percent << "\n";
+
                 std::cout << method << " | " << (type == DistanceType::Euclidean ? "L2" : "L1")
-                          << " | k: " << k << " | correct: " << accuracy.correct << "/" << data.size()
-                          << " | recognition rate: " << accuracy.percent << "%\n";
+                          << " | k: " << k << " | correct: " << accuracy.correct << "/"
+                          << data.size() << " | recognition rate: " << accuracy.percent << "%\n";
             }
         }
     }
@@ -77,6 +95,14 @@ PredictionsBySetting runVoting(const KnnPredictions& knn) {
     printSection("2.c. Majority vote (leave-one-out)");
 
     PredictionsBySetting results;
+
+    std::filesystem::create_directories("results");
+    std::ofstream csv("results/experiment2_vote_6classes.csv");
+    if (!csv) {
+        throw std::runtime_error("Cannot create voting CSV");
+    }
+    csv << "distance,k,correct,total,recognition_rate_percent\n";
+
     for (DistanceType type : {DistanceType::Euclidean, DistanceType::Manhattan}) {
         for (int k : neighborCounts) {
             const auto setting = std::make_pair(type, k);
@@ -92,6 +118,11 @@ PredictionsBySetting runVoting(const KnnPredictions& knn) {
             }
 
             const Accuracy accuracy = classificationAccuracy(result.truth, result.predicted);
+
+            csv << (type == DistanceType::Euclidean ? "L2" : "L1") << "," << k << ","
+                << accuracy.correct << "," << result.truth.size() << "," << std::fixed
+                << std::setprecision(4) << accuracy.percent << "\n";
+
             std::cout << "vote | " << (type == DistanceType::Euclidean ? "L2" : "L1")
                       << " | k: " << k << " | recognition rate: " << accuracy.percent << "%\n";
         }
@@ -103,9 +134,10 @@ void runSVM(const std::vector<Sample>& data) {
     printSection("2.d. SVM classification (leave-one-out)");
 
     for (const auto& method : methodNames()) {
-        const Predictions result = leaveOneOut(data, [&](const auto& training, const Sample& query) {
-            return predictSVM(training, query.features.at(method), method);
-        });
+        const Predictions result =
+            leaveOneOut(data, [&](const auto& training, const Sample& query) {
+                return predictSVM(training, query.features.at(method), method);
+            });
         const Accuracy accuracy = classificationAccuracy(result.truth, result.predicted);
         std::cout << method << " | SVM RBF | correct: " << accuracy.correct << "/" << data.size()
                   << " | recognition rate: " << accuracy.percent << "%\n";

@@ -1,0 +1,54 @@
+72 samples loaded
+all samples have the expected descriptor dimensions
+
+======================= 2.a. k-NN classification (leave-one-out) =======================
+ART | L2 | k: 1 | correct: 72/72 | recognition rate: 100%
+ART | L2 | k: 3 | correct: 71/72 | recognition rate: 98.6111%
+ART | L2 | k: 5 | correct: 71/72 | recognition rate: 98.6111%
+ART | L2 | k: 7 | correct: 70/72 | recognition rate: 97.2222%
+ART | L2 | k: 9 | correct: 69/72 | recognition rate: 95.8333%
+ART | L1 | k: 1 | correct: 72/72 | recognition rate: 100%
+ART | L1 | k: 3 | correct: 71/72 | recognition rate: 98.6111%
+ART | L1 | k: 5 | correct: 71/72 | recognition rate: 98.6111%
+ART | L1 | k: 7 | correct: 71/72 | recognition rate: 98.6111%
+ART | L1 | k: 9 | correct: 70/72 | recognition rate: 97.2222%
+GFD | L2 | k: 1 | correct: 72/72 | recognition rate: 100%
+GFD | L2 | k: 3 | correct: 71/72 | recognition rate: 98.6111%
+GFD | L2 | k: 5 | correct: 71/72 | recognition rate: 98.6111%
+GFD | L2 | k: 7 | correct: 71/72 | recognition rate: 98.6111%
+GFD | L2 | k: 9 | correct: 69/72 | recognition rate: 95.8333%
+GFD | L1 | k: 1 | correct: 72/72 | recognition rate: 100%
+GFD | L1 | k: 3 | correct: 72/72 | recognition rate: 100%
+GFD | L1 | k: 5 | correct: 72/72 | recognition rate: 100%
+GFD | L1 | k: 7 | correct: 70/72 | recognition rate: 97.2222%
+GFD | L1 | k: 9 | correct: 69/72 | recognition rate: 95.8333%
+SA | L2 | k: 1 | correct: 60/72 | recognition rate: 83.3333%
+SA | L2 | k: 3 | correct: 57/72 | recognition rate: 79.1667%
+SA | L2 | k: 5 | correct: 56/72 | recognition rate: 77.7778%
+SA | L2 | k: 7 | correct: 52/72 | recognition rate: 72.2222%
+SA | L2 | k: 9 | correct: 51/72 | recognition rate: 70.8333%
+SA | L1 | k: 1 | correct: 60/72 | recognition rate: 83.3333%
+SA | L1 | k: 3 | correct: 58/72 | recognition rate: 80.5556%
+SA | L1 | k: 5 | correct: 56/72 | recognition rate: 77.7778%
+SA | L1 | k: 7 | correct: 52/72 | recognition rate: 72.2222%
+SA | L1 | k: 9 | correct: 52/72 | recognition rate: 72.2222%
+Yang | L2 | k: 1 | correct: 69/72 | recognition rate: 95.8333%
+Yang | L2 | k: 3 | correct: 70/72 | recognition rate: 97.2222%
+Yang | L2 | k: 5 | correct: 69/72 | recognition rate: 95.8333%
+Yang | L2 | k: 7 | correct: 67/72 | recognition rate: 93.0556%
+Yang | L2 | k: 9 | correct: 67/72 | recognition rate: 93.0556%
+Yang | L1 | k: 1 | correct: 69/72 | recognition rate: 95.8333%
+Yang | L1 | k: 3 | correct: 70/72 | recognition rate: 97.2222%
+Yang | L1 | k: 5 | correct: 70/72 | recognition rate: 97.2222%
+Yang | L1 | k: 7 | correct: 67/72 | recognition rate: 93.0556%
+Yang | L1 | k: 9 | correct: 67/72 | recognition rate: 93.0556%
+Zernike7 | L2 | k: 1 | correct: 72/72 | recognition rate: 100%
+Zernike7 | L2 | k: 3 | correct: 72/72 | recognition rate: 100%
+Zernike7 | L2 | k: 5 | correct: 71/72 | recognition rate: 98.6111%
+Zernike7 | L2 | k: 7 | correct: 70/72 | recognition rate: 97.2222%
+Zernike7 | L2 | k: 9 | correct: 69/72 | recognition rate: 95.8333%
+Zernike7 | L1 | k: 1 | correct: 72/72 | recognition rate: 100%
+Zernike7 | L1 | k: 3 | correct: 71/72 | recognition rate: 98.6111%
+Zernike7 | L1 | k: 5 | correct: 71/72 | recognition rate: 98.6111%
+Zernike7 | L1 | k: 7 | correct: 71/72 | recognition rate: 98.6111%
+Zernike7 | L1 | k: 9 | correct: 70/72 | recognition rate: 97.2222%

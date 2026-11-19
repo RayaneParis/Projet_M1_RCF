@@ -6,4 +6,3 @@ data/
 ProjetM1RF2026.pdf
 docs/*
 !docs/*.pdf
-results/
