@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>k-NN Recognition Rate Comparison — Leave-One-Out</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #1d2937;
+            --muted: #637387;
+            --line: #dce4ec;
+            --blue: #174c74;
+            --soft: #f4f7fa;
+            --green: #dff2e9;
+            --green-ink: #126447;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+            line-height: 1.53;
+            color: var(--ink);
+            background: #f5f7fa;
+            margin: 0
+        }
+
+        main {
+            max-width: 1040px;
+            margin: 24px auto;
+            padding: 22px 24px 32px;
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            box-shadow: 0 4px 18px #1522340a
+        }
+
+        h1 {
+            font-size: 1.65rem;
+            line-height: 1.22;
+            letter-spacing: -.025em;
+            margin: 0 0 7px;
+            color: #153b5b
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: .93rem;
+            margin: 0 0 17px
+        }
+
+        .summary {
+            display: flex;
+            gap: 9px;
+            flex-wrap: wrap;
+            margin-bottom: 18px
+        }
+
+        .pill {
+            border: 1px solid var(--line);
+            background: var(--soft);
+            border-radius: 99px;
+            padding: 5px 11px;
+            font-size: .83rem;
+            font-weight: 600
+        }
+
+        .tables {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px
+        }
+
+        .table-panel {
+            min-width: 0
+        }
+
+        h2 {
+            font-size: 1.02rem;
+            color: var(--blue);
+            margin: 0 0 9px
+        }
+
+        h2 span {
+            font-size: .87rem;
+            color: var(--muted);
+            font-weight: 500
+        }
+
+        .table-scroll {
+            overflow-x: auto
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .87rem;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap
+        }
+
+        th,
+        td {
+            padding: 8px 9px;
+            border-bottom: 1px solid var(--line);
+            text-align: right
+        }
+
+        thead th {
+            color: #33485f;
+            background: var(--soft);
+            font-weight: 700
+        }
+
+        th:first-child,
+        td:first-child {
+            text-align: left
+        }
+
+        tbody th {
+            font-weight: 650
+        }
+
+        tbody tr:hover {
+            background: #fafcff
+        }
+
+        .perfect {
+            background: var(--green);
+            font-weight: 700;
+            color: var(--green-ink)
+        }
+
+        .legend {
+            color: var(--muted);
+            font-size: .81rem;
+            margin: 9px 0 18px
+        }
+
+        section.analysis {
+            border-top: 1px solid var(--line);
+            padding-top: 15px;
+            margin-top: 11px
+        }
+
+        section.analysis h2 {
+            font-size: 1.06rem;
+            margin-bottom: 7px
+        }
+
+        p {
+            margin: 7px 0 11px
+        }
+
+        .compact-table {
+            max-width: 850px
+        }
+
+        .compact-table th,
+        .compact-table td {
+            text-align: left;
+            white-space: normal
+        }
+
+        .compact-table th {
+            width: auto
+        }
+
+        .muted {
+            color: var(--muted)
+        }
+
+        .note {
+            font-size: .91rem;
+            color: #465b70;
+            background: #f3f7fa;
+            border-left: 3px solid #8ca8be;
+            padding: 10px 13px;
+            margin: 12px 0 0
+        }
+
+        .counts {
+            font-weight: 700;
+            color: #153b5b
+        }
+
+        .footer {
+            font-size: .81rem;
+            color: var(--muted);
+            margin-top: 19px;
+            padding-top: 11px;
+            border-top: 1px solid var(--line)
+        }
+
+        @media(max-width:700px) {
+            main {
+                margin: 0;
+                border: 0;
+                border-radius: 0;
+                padding: 17px 14px
+            }
+
+            .tables {
+                grid-template-columns: 1fr
+            }
+
+            h1 {
+                font-size: 1.42rem
+            }
+        }
+
+        @media print {
+            body {
+                background: white
+            }
+
+            main {
+                box-shadow: none;
+                border: 0;
+                max-width: none;
+                margin: 0;
+                padding: 0
+            }
+
+            section.analysis {
+                break-inside: avoid
+            }
+
+            .table-panel {
+                break-inside: avoid
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <h1>k-NN recognition rate comparison</h1>
+        <p class="subtitle">Leave-one-out (LOO) validation · 72 samples · 5 shape descriptors · Manhattan (L1) vs
+            Euclidean (L2)</p>
+        <div class="summary"><span class="pill">Rates = correctly classified / 72 × 100</span><span class="pill">k = 1,
+                3, 5, 7, 9</span><span class="pill">Green = perfect result</span></div>
+        <div class="tables">
+            <section class="table-panel">
+                <h2>Table A <span>— Manhattan distance</span></h2>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th scope="col">Descriptor</th>
+                                <th scope="col">k=1</th>
+                                <th scope="col">k=3</th>
+                                <th scope="col">k=5</th>
+                                <th scope="col">k=7</th>
+                                <th scope="col">k=9</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">ART</th>
+                                <td class="perfect" title="72 correctly classified out of 72">100.00%</td>
+                                <td class="" title="71 correctly classified out of 72">98.61%</td>
+                                <td class="" title="71 correctly classified out of 72">98.61%</td>
+                                <td class="" title="71 correctly classified out of 72">98.61%</td>
+                                <td class="" title="70 correctly classified out of 72">97.22%</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">GFD</th>
+                                <td class="perfect" title="72 correctly classified out of 72">100.00%</td>
+                                <td class="perfect" title="72 correctly classified out of 72">100.00%</td>
+                                <td class="perfect" title="72 correctly classified out of 72">100.00%</td>
+                                <td class="" title="70 correctly classified out of 72">97.22%</td>
+                                <td class="" title="69 correctly classified out of 72">95.83%</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">SA</th>
+                                <td class="" title="60 correctly classified out of 72">83.33%</td>
+                                <td class="" title="58 correctly classified out of 72">80.56%</td>
+                                <td class="" title="56 correctly classified out of 72">77.78%</td>
+                                <td class="" title="52 correctly classified out of 72">72.22%</td>
+                                <td class="" title="52 correctly classified out of 72">72.22%</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Yang</th>
+                                <td class="" title="69 correctly classified out of 72">95.83%</td>
+                                <td class="" title="70 correctly classified out of 72">97.22%</td>
+                                <td class="" title="70 correctly classified out of 72">97.22%</td>
+                                <td class="" title="67 correctly classified out of 72">93.06%</td>
+                                <td class="" title="67 correctly classified out of 72">93.06%</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Zernike7</th>
+                                <td class="perfect" title="72 correctly classified out of 72">100.00%</td>
+                                <td class="" title="71 correctly classified out of 72">98.61%</td>
+                                <td class="" title="71 correctly classified out of 72">98.61%</td>
+                                <td class="" title="71 correctly classified out of 72">98.61%</td>
+                                <td class="" title="70 correctly classified out of 72">97.22%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            <section class="table-panel">
+                <h2>Table B <span>— Euclidean distance</span></h2>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th scope="col">Descriptor</th>
+                                <th scope="col">k=1</th>
+                                <th scope="col">k=3</th>
+                                <th scope="col">k=5</th>
+                                <th scope="col">k=7</th>
+                                <th scope="col">k=9</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">ART</th>
+                                <td class="perfect" title="72 correctly classified out of 72">100.00%</td>
+                                <td class="" title="71 correctly classified out of 72">98.61%</td>
+                                <td class="" title="71 correctly classified out of 72">98.61%</td>
+                                <td class="" title="70 correctly classified out of 72">97.22%</td>
+                                <td class="" title="69 correctly classified out of 72">95.83%</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">GFD</th>
+                                <td class="perfect" title="72 correctly classified out of 72">100.00%</td>
+                                <td class="" title="71 correctly classified out of 72">98.61%</td>
+                                <td class="" title="71 correctly classified out of 72">98.61%</td>
+                                <td class="" title="71 correctly classified out of 72">98.61%</td>
+                                <td class="" title="69 correctly classified out of 72">95.83%</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">SA</th>
+                                <td class="" title="60 correctly classified out of 72">83.33%</td>
+                                <td class="" title="57 correctly classified out of 72">79.17%</td>
+                                <td class="" title="56 correctly classified out of 72">77.78%</td>
+                                <td class="" title="52 correctly classified out of 72">72.22%</td>
+                                <td class="" title="51 correctly classified out of 72">70.83%</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Yang</th>
+                                <td class="" title="69 correctly classified out of 72">95.83%</td>
+                                <td class="" title="70 correctly classified out of 72">97.22%</td>
+                                <td class="" title="69 correctly classified out of 72">95.83%</td>
+                                <td class="" title="67 correctly classified out of 72">93.06%</td>
+                                <td class="" title="67 correctly classified out of 72">93.06%</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Zernike7</th>
+                                <td class="perfect" title="72 correctly classified out of 72">100.00%</td>
+                                <td class="perfect" title="72 correctly classified out of 72">100.00%</td>
+                                <td class="" title="71 correctly classified out of 72">98.61%</td>
+                                <td class="" title="70 correctly classified out of 72">97.22%</td>
+                                <td class="" title="69 correctly classified out of 72">95.83%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+        <p class="legend">All values are recognition rates rounded to two decimal places. Hover over a cell to see its
+            exact correct-classification count; each additional correct image changes the rate by 1.39 percentage
+            points.</p>
+        <section class="analysis">
+            <h2>Comparison A — Influence of the descriptor</h2>
+            <p>For each fixed distance and <em>k</em>, compare <strong>down the column</strong>. The highest-scoring
+                descriptors are:</p>
+            <div class="table-scroll">
+                <table class="compact-table">
+                    <thead>
+                        <tr>
+                            <th>k</th>
+                            <th>L1 winner(s)</th>
+                            <th>L2 winner(s)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">k=1</th>
+                            <td>ART, GFD, Zernike7 <span class="muted">(100.00%)</span></td>
+                            <td>ART, GFD, Zernike7 <span class="muted">(100.00%)</span></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">k=3</th>
+                            <td>GFD <span class="muted">(100.00%)</span></td>
+                            <td>Zernike7 <span class="muted">(100.00%)</span></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">k=5</th>
+                            <td>GFD <span class="muted">(100.00%)</span></td>
+                            <td>ART, GFD, Zernike7 <span class="muted">(98.61%)</span></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">k=7</th>
+                            <td>ART, Zernike7 <span class="muted">(98.61%)</span></td>
+                            <td>GFD <span class="muted">(98.61%)</span></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">k=9</th>
+                            <td>ART, Zernike7 <span class="muted">(97.22%)</span></td>
+                            <td>ART, GFD, Zernike7 <span class="muted">(95.83%)</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p><strong>Why:</strong> ART, GFD and Zernike7 consistently score near the top, suggesting that their
+                feature representations separate these six classes more effectively in this dataset. <strong>GFD with
+                    L1</strong> retains 100% up to k=5; <strong>Zernike7 with L2</strong> retains 100% up to k=3. ART
+                achieves 100% at k=1 with either distance, but loses accuracy when more neighbors vote. Yang performs
+                well (93.06%–97.22%) but does not reach 100%; SA is considerably weaker (70.83%–83.33%), suggesting more
+                overlap between its representations of different classes.</p>
+            <p class="muted">These are conclusions about this 72-sample experiment, not proof that one descriptor is
+                universally superior.</p>
+        </section>
+        <section class="analysis">
+            <h2>Comparison B — Influence of the distance</h2>
+            <p>Compare <strong>the same descriptor at the same k</strong> across Table A (L1) and Table B (L2). Across
+                all 25 matched comparisons, <span class="counts">L1 wins 9</span>, <span class="counts">L2 wins
+                    2</span>, and <span class="counts">14 are ties</span>. Every non-tie is just <strong>1 correctly
+                    classified image out of 72 (1.39 percentage points)</strong>.</p>
+            <p><strong>Examples:</strong> ART at k=3 gives 98.61% with either distance (tie), while at k=7 L1 gives
+                98.61% versus 97.22% with L2. GFD at k=7 favors L2 (98.61% versus 97.22%); Zernike7 at k=3 also favors
+                L2 (100% versus 98.61%).</p>
+            <p><strong>Why:</strong> L1 sums absolute coordinate differences, whereas L2 gives greater influence to
+                large coordinate differences through squared terms before taking the square root. That may change the
+                closest neighbors and therefore the votes. L1 has a slight overall advantage here, <strong>but not
+                    consistently for every descriptor and k</strong>; the differences are small enough that it would be
+                unjustified to claim a decisive distance advantage.</p>
+        </section>
+        <section class="analysis">
+            <h2>Comparison C — Influence of k</h2>
+            <p>Read <strong>across each descriptor row</strong>. ART, GFD, SA and Zernike7 are best at k=1 (some remain
+                tied for best at larger k). Yang is the exception: it rises from 95.83% at k=1 to 97.22% at k=3 with
+                either distance, and L1 keeps 97.22% at k=5.</p>
+            <p><strong>Concrete trends:</strong> ART–L2 falls from 100.00% at k=1 to 95.83% at k=9. SA–L2 falls from
+                83.33% to 70.83%. GFD–L1 stays at 100.00% for k=1, 3 and 5, then drops to 95.83% by k=9. Zernike7–L2
+                stays at 100.00% for k=1 and 3 before declining.</p>
+            <p><strong>Why:</strong> With k=1, classification depends on the closest training example. Increasing k can
+                make voting less sensitive to one atypical neighbor, which helps Yang at k=3. However, with these class
+                representations, larger neighborhoods can include more examples from competing classes, changing the
+                majority vote and lowering recognition. Therefore, <strong>increasing k does not automatically improve
+                    accuracy</strong>.</p>
+        </section>
+        <section class="analysis">
+            <h2>Comparison D — Best overall configuration</h2>
+            <p>The maximum across both tables is <strong>100.00% = 72/72 correctly classified</strong>. The following
+                <strong>nine configurations</strong> are tied for the best score:</p>
+            <div class="table-scroll">
+                <table class="compact-table">
+                    <thead>
+                        <tr>
+                            <th>Descriptor</th>
+                            <th>Distance</th>
+                            <th>k</th>
+                            <th>Recognition rate</th>
+                            <th>Correct images</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">ART</th>
+                            <td>L1</td>
+                            <td>1</td>
+                            <td>100.00%</td>
+                            <td>72 / 72</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">ART</th>
+                            <td>L2</td>
+                            <td>1</td>
+                            <td>100.00%</td>
+                            <td>72 / 72</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">GFD</th>
+                            <td>L1</td>
+                            <td>1</td>
+                            <td>100.00%</td>
+                            <td>72 / 72</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">GFD</th>
+                            <td>L1</td>
+                            <td>3</td>
+                            <td>100.00%</td>
+                            <td>72 / 72</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">GFD</th>
+                            <td>L1</td>
+                            <td>5</td>
+                            <td>100.00%</td>
+                            <td>72 / 72</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">GFD</th>
+                            <td>L2</td>
+                            <td>1</td>
+                            <td>100.00%</td>
+                            <td>72 / 72</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Zernike7</th>
+                            <td>L1</td>
+                            <td>1</td>
+                            <td>100.00%</td>
+                            <td>72 / 72</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Zernike7</th>
+                            <td>L2</td>
+                            <td>1</td>
+                            <td>100.00%</td>
+                            <td>72 / 72</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Zernike7</th>
+                            <td>L2</td>
+                            <td>3</td>
+                            <td>100.00%</td>
+                            <td>72 / 72</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p><strong>Interpretation:</strong> No single configuration is the unique winner. If choosing a setting
+                based only on these results, GFD–L1 is a reasonable candidate because it remains perfect for three k
+                values (1, 3 and 5), while Zernike7–L2 is perfect at k=1 and k=3. These patterns suggest more stability
+                to k in the tested range, but they do not establish better out-of-sample generalization.</p>
+            <p class="note"><strong>Important limitation:</strong> Leave-one-out tests each image against the other 71
+                images, but all observations come from the same small collection. Even 100% LOO accuracy is not a
+                guarantee on new, independent images. Choosing a descriptor, distance and k after inspecting these
+                results can also produce an optimistic estimate.</p>
+        </section>
+        
+    </main>
+</body>
+
+</html>
