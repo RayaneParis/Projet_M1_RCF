@@ -82,7 +82,6 @@ std::vector<Sample> loadDataset(const std::string& root, int maxClasses) {
             Sample& sample = byName[name];
             sample.name = name;
             sample.label = label;
-            sample.index = std::stoi(name.substr(4, 3));
             sample.features[method] = readVector(entry.path());
         }
     }

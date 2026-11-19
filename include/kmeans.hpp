@@ -16,6 +16,3 @@ struct KMeansResult {
 
 KMeansResult kmeans(const std::vector<Sample>& data, const std::string& method, int K,
                     unsigned seed, int maxIter = 100);
-
-// cluster purity uses the true labels, unlike the clustering step
-double clusterRecognitionRate(const std::vector<Sample>& data, const KMeansResult& result, int K);
