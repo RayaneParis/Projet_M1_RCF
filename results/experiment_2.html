@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Experiment 2 — Majority voting vs Experiment 1</title>
+    <style>
+        :root {
+            --ink: #203145;
+            --muted: #526476;
+            --line: #dce4eb;
+            --bg: #f6f8fa;
+            --accent: #ce5926
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            font: 14px/1.55 system-ui, -apple-system, 'Segoe UI', sans-serif;
+            color: var(--ink)
+        }
+
+        main {
+            max-width: 1120px;
+            margin: auto;
+            padding: 24px 20px 32px
+        }
+
+        h1 {
+            font-size: 24px;
+            line-height: 1.25;
+            margin: 0 0 4px
+        }
+
+        h2 {
+            font-size: 16px;
+            margin: 0 0 8px
+        }
+
+        p {
+            margin: 7px 0
+        }
+
+        small,
+        .muted {
+            color: var(--muted)
+        }
+
+        .subtitle {
+            color: var(--muted);
+            margin: 0 0 17px
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin: 0 0 16px
+        }
+
+        .metric,
+        .section {
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            padding: 14px 16px
+        }
+
+        .metric strong {
+            display: block;
+            font-size: 21px;
+            line-height: 1.3
+        }
+
+        .metric span {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .section {
+            margin-bottom: 14px
+        }
+
+        .tablewrap {
+            overflow-x: auto
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-variant-numeric: tabular-nums;
+            font-size: 12px;
+            white-space: nowrap
+        }
+
+        th,
+        td {
+            padding: 8px 10px;
+            text-align: right;
+            border-bottom: 1px solid #e6ebf0
+        }
+
+        th:first-child,
+        td:first-child {
+            text-align: left
+        }
+
+        thead {
+            background: #203145;
+            color: white
+        }
+
+        thead th {
+            font-size: 11px;
+            font-weight: 650
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f8fafc
+        }
+
+        tbody tr:nth-child(5) {
+            border-bottom: 2px solid #aab8c7
+        }
+
+        .voteth,
+        .votecell {
+            background: #fff1dc;
+            color: #70410a
+        }
+
+        .voteth {
+            background: #ad6932;
+            color: white
+        }
+
+        .gain {
+            background: #dff3e8;
+            color: #176344;
+            font-weight: 750
+        }
+
+        .tie {
+            color: #596a77
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px
+        }
+
+        .chart-box h3 {
+            font-size: 13px;
+            margin: 5px 0
+        }
+
+        svg.plot {
+            display: block;
+            width: 100%;
+            height: auto
+        }
+
+        svg .tick {
+            fill: #657789;
+            font: 12px system-ui
+        }
+
+        svg .axis {
+            fill: #526476;
+            font: 11px system-ui
+        }
+
+        .legends {
+            display: flex;
+            gap: 11px;
+            flex-wrap: wrap;
+            margin-top: 3px
+        }
+
+        .legend {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #4f6073;
+            font-size: 12px
+        }
+
+        .legend i {
+            display: inline-block;
+            width: 19px;
+            border-radius: 3px
+        }
+
+        .explain {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px
+        }
+
+        .explain article {
+            border-top: 2px solid #dbe3ea;
+            padding-top: 9px
+        }
+
+        .explain h3 {
+            font-size: 14px;
+            margin: 0 0 4px
+        }
+
+        .explain p {
+            margin: 0;
+            color: #3b4d5f
+        }
+
+        .foot {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        a {
+            color: #195c95
+        }
+
+        @media(max-width:750px) {
+
+            .grid,
+            .chart-grid,
+            .explain {
+                grid-template-columns: 1fr
+            }
+
+            main {
+                padding: 16px 10px
+            }
+
+            .section {
+                padding: 11px
+            }
+
+            h1 {
+                font-size: 21px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <h1>Experiment 2 · Majority voting vs individual descriptors</h1>
+        <p class="subtitle">6 classes · 72 images · leave-one-out k-NN · rates are on a 0–100 scale</p>
+        <div class="grid">
+            <div class="metric"><strong>5 configurations · 100%</strong><span>Best voting accuracy: L1 k=1,3,5 and L2
+                    k=1,3</span></div>
+            <div class="metric"><strong>9 ties · 1 win</strong><span>Vote vs the best descriptor at identical distance
+                    and k</span></div>
+            <div class="metric"><strong>2-image range</strong><span>Vote varies from 72/72 to 70/72 under both
+                    distances</span></div>
+        </div>
+        <section class="section">
+            <h2>Results and direct comparison</h2>
+            <div class="tablewrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Distance</th>
+                            <th>k</th>
+                            <th>ART</th>
+                            <th>GFD</th>
+                            <th>SA</th>
+                            <th>Yang</th>
+                            <th>Zernike7</th>
+                            <th class="voteth">Vote</th>
+                            <th>Best individual</th>
+                            <th>Vote − Best <small>(pp)</small></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>L1</b></td>
+                            <td>1</td>
+                            <td>100.0000</td>
+                            <td>100.0000</td>
+                            <td>83.3333</td>
+                            <td>95.8333</td>
+                            <td>100.0000</td>
+                            <td class="votecell"><b>100.0000</b></td>
+                            <td>100.0000</td>
+                            <td class="tie">0.0000</td>
+                        </tr>
+                        <tr>
+                            <td><b>L1</b></td>
+                            <td>3</td>
+                            <td>98.6111</td>
+                            <td>100.0000</td>
+                            <td>80.5556</td>
+                            <td>97.2222</td>
+                            <td>98.6111</td>
+                            <td class="votecell"><b>100.0000</b></td>
+                            <td>100.0000</td>
+                            <td class="tie">0.0000</td>
+                        </tr>
+                        <tr>
+                            <td><b>L1</b></td>
+                            <td>5</td>
+                            <td>98.6111</td>
+                            <td>100.0000</td>
+                            <td>77.7778</td>
+                            <td>97.2222</td>
+                            <td>98.6111</td>
+                            <td class="votecell"><b>100.0000</b></td>
+                            <td>100.0000</td>
+                            <td class="tie">0.0000</td>
+                        </tr>
+                        <tr>
+                            <td><b>L1</b></td>
+                            <td>7</td>
+                            <td>98.6111</td>
+                            <td>97.2222</td>
+                            <td>72.2222</td>
+                            <td>93.0556</td>
+                            <td>98.6111</td>
+                            <td class="votecell"><b>98.6111</b></td>
+                            <td>98.6111</td>
+                            <td class="tie">0.0000</td>
+                        </tr>
+                        <tr>
+                            <td><b>L1</b></td>
+                            <td>9</td>
+                            <td>97.2222</td>
+                            <td>95.8333</td>
+                            <td>72.2222</td>
+                            <td>93.0556</td>
+                            <td>97.2222</td>
+                            <td class="votecell"><b>97.2222</b></td>
+                            <td>97.2222</td>
+                            <td class="tie">0.0000</td>
+                        </tr>
+                        <tr>
+                            <td><b>L2</b></td>
+                            <td>1</td>
+                            <td>100.0000</td>
+                            <td>100.0000</td>
+                            <td>83.3333</td>
+                            <td>95.8333</td>
+                            <td>100.0000</td>
+                            <td class="votecell"><b>100.0000</b></td>
+                            <td>100.0000</td>
+                            <td class="tie">0.0000</td>
+                        </tr>
+                        <tr>
+                            <td><b>L2</b></td>
+                            <td>3</td>
+                            <td>98.6111</td>
+                            <td>98.6111</td>
+                            <td>79.1667</td>
+                            <td>97.2222</td>
+                            <td>100.0000</td>
+                            <td class="votecell"><b>100.0000</b></td>
+                            <td>100.0000</td>
+                            <td class="tie">0.0000</td>
+                        </tr>
+                        <tr>
+                            <td><b>L2</b></td>
+                            <td>5</td>
+                            <td>98.6111</td>
+                            <td>98.6111</td>
+                            <td>77.7778</td>
+                            <td>95.8333</td>
+                            <td>98.6111</td>
+                            <td class="votecell"><b>98.6111</b></td>
+                            <td>98.6111</td>
+                            <td class="tie">0.0000</td>
+                        </tr>
+                        <tr>
+                            <td><b>L2</b></td>
+                            <td>7</td>
+                            <td>97.2222</td>
+                            <td>98.6111</td>
+                            <td>72.2222</td>
+                            <td>93.0556</td>
+                            <td>97.2222</td>
+                            <td class="votecell"><b>98.6111</b></td>
+                            <td>98.6111</td>
+                            <td class="tie">0.0000</td>
+                        </tr>
+                        <tr>
+                            <td><b>L2</b></td>
+                            <td>9</td>
+                            <td>95.8333</td>
+                            <td>95.8333</td>
+                            <td>70.8333</td>
+                            <td>93.0556</td>
+                            <td>95.8333</td>
+                            <td class="votecell"><b>97.2222</b></td>
+                            <td>95.8333</td>
+                            <td class="gain">+1.3889</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="foot">Best individual = MAX(ART, GFD, SA, Yang, Zernike7). “Vote − Best” is measured in percentage
+                points (pp), not percent change. Rates have four decimal places.</p>
+        </section>
+        <section class="section">
+            <h2>Recognition rate versus k</h2>
+            <div class="legends"><span class="legend"><i style="background:#4B83B3;height:3px"></i>ART</span><span
+                    class="legend"><i style="background:#3C927F;height:3px"></i>GFD</span><span class="legend"><i
+                        style="background:#8B6EA6;height:3px"></i>SA</span><span class="legend"><i
+                        style="background:#A4754B;height:3px"></i>Yang</span><span class="legend"><i
+                        style="background:#6D8791;height:3px"></i>Zernike7</span><span class="legend"><i
+                        style="background:#CE5926;height:5px"></i>Vote</span></div>
+            <div class="chart-grid">
+                <div class="chart-box">
+                    <h3>Graph 1 — L1 (Manhattan)</h3><svg class="plot" viewBox="0 0 770 260" role="img"
+                        aria-label="Recognition rate by k for L1: five descriptors and voting">
+                        <line x1="59" y1="210.8" x2="748" y2="210.8" stroke="#dce4eb" stroke-width="1" /><text x="48"
+                            y="214.8" text-anchor="end" class="tick">70</text>
+                        <line x1="59" y1="149.3" x2="748" y2="149.3" stroke="#dce4eb" stroke-width="1" /><text x="48"
+                            y="153.3" text-anchor="end" class="tick">80</text>
+                        <line x1="59" y1="87.7" x2="748" y2="87.7" stroke="#dce4eb" stroke-width="1" /><text x="48"
+                            y="91.7" text-anchor="end" class="tick">90</text>
+                        <line x1="59" y1="26.2" x2="748" y2="26.2" stroke="#dce4eb" stroke-width="1" /><text x="48"
+                            y="30.2" text-anchor="end" class="tick">100</text><text x="59.0" y="238"
+                            text-anchor="middle" class="tick">1</text><text x="231.2" y="238" text-anchor="middle"
+                            class="tick">3</text><text x="403.5" y="238" text-anchor="middle" class="tick">5</text><text
+                            x="575.8" y="238" text-anchor="middle" class="tick">7</text><text x="748.0" y="238"
+                            text-anchor="middle" class="tick">9</text><text x="403.5" y="257" text-anchor="middle"
+                            class="axis">k</text><text x="9" y="28" class="axis">%</text>
+                        <polyline fill="none" points="59.0,26.2 231.2,34.7 403.5,34.7 575.8,34.7 748.0,43.3"
+                            stroke="#4B83B3" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="59.0" cy="26.2" r="2.5" fill="#4B83B3">
+                            <title>ART · L1 · k=1: 100.0000%</title>
+                        </circle>
+                        <circle cx="231.2" cy="34.7" r="2.5" fill="#4B83B3">
+                            <title>ART · L1 · k=3: 98.6111%</title>
+                        </circle>
+                        <circle cx="403.5" cy="34.7" r="2.5" fill="#4B83B3">
+                            <title>ART · L1 · k=5: 98.6111%</title>
+                        </circle>
+                        <circle cx="575.8" cy="34.7" r="2.5" fill="#4B83B3">
+                            <title>ART · L1 · k=7: 98.6111%</title>
+                        </circle>
+                        <circle cx="748.0" cy="43.3" r="2.5" fill="#4B83B3">
+                            <title>ART · L1 · k=9: 97.2222%</title>
+                        </circle>
+                        <polyline fill="none" points="59.0,26.2 231.2,26.2 403.5,26.2 575.8,43.3 748.0,51.8"
+                            stroke="#3C927F" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="59.0" cy="26.2" r="2.5" fill="#3C927F">
+                            <title>GFD · L1 · k=1: 100.0000%</title>
+                        </circle>
+                        <circle cx="231.2" cy="26.2" r="2.5" fill="#3C927F">
+                            <title>GFD · L1 · k=3: 100.0000%</title>
+                        </circle>
+                        <circle cx="403.5" cy="26.2" r="2.5" fill="#3C927F">
+                            <title>GFD · L1 · k=5: 100.0000%</title>
+                        </circle>
+                        <circle cx="575.8" cy="43.3" r="2.5" fill="#3C927F">
+                            <title>GFD · L1 · k=7: 97.2222%</title>
+                        </circle>
+                        <circle cx="748.0" cy="51.8" r="2.5" fill="#3C927F">
+                            <title>GFD · L1 · k=9: 95.8333%</title>
+                        </circle>
+                        <polyline fill="none" points="59.0,128.8 231.2,145.9 403.5,163.0 575.8,197.2 748.0,197.2"
+                            stroke="#8B6EA6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="59.0" cy="128.8" r="2.5" fill="#8B6EA6">
+                            <title>SA · L1 · k=1: 83.3333%</title>
+                        </circle>
+                        <circle cx="231.2" cy="145.9" r="2.5" fill="#8B6EA6">
+                            <title>SA · L1 · k=3: 80.5556%</title>
+                        </circle>
+                        <circle cx="403.5" cy="163.0" r="2.5" fill="#8B6EA6">
+                            <title>SA · L1 · k=5: 77.7778%</title>
+                        </circle>
+                        <circle cx="575.8" cy="197.2" r="2.5" fill="#8B6EA6">
+                            <title>SA · L1 · k=7: 72.2222%</title>
+                        </circle>
+                        <circle cx="748.0" cy="197.2" r="2.5" fill="#8B6EA6">
+                            <title>SA · L1 · k=9: 72.2222%</title>
+                        </circle>
+                        <polyline fill="none" points="59.0,51.8 231.2,43.3 403.5,43.3 575.8,68.9 748.0,68.9"
+                            stroke="#A4754B" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="59.0" cy="51.8" r="2.5" fill="#A4754B">
+                            <title>Yang · L1 · k=1: 95.8333%</title>
+                        </circle>
+                        <circle cx="231.2" cy="43.3" r="2.5" fill="#A4754B">
+                            <title>Yang · L1 · k=3: 97.2222%</title>
+                        </circle>
+                        <circle cx="403.5" cy="43.3" r="2.5" fill="#A4754B">
+                            <title>Yang · L1 · k=5: 97.2222%</title>
+                        </circle>
+                        <circle cx="575.8" cy="68.9" r="2.5" fill="#A4754B">
+                            <title>Yang · L1 · k=7: 93.0556%</title>
+                        </circle>
+                        <circle cx="748.0" cy="68.9" r="2.5" fill="#A4754B">
+                            <title>Yang · L1 · k=9: 93.0556%</title>
+                        </circle>
+                        <polyline fill="none" points="59.0,26.2 231.2,34.7 403.5,34.7 575.8,34.7 748.0,43.3"
+                            stroke="#6D8791" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="59.0" cy="26.2" r="2.5" fill="#6D8791">
+                            <title>Zernike7 · L1 · k=1: 100.0000%</title>
+                        </circle>
+                        <circle cx="231.2" cy="34.7" r="2.5" fill="#6D8791">
+                            <title>Zernike7 · L1 · k=3: 98.6111%</title>
+                        </circle>
+                        <circle cx="403.5" cy="34.7" r="2.5" fill="#6D8791">
+                            <title>Zernike7 · L1 · k=5: 98.6111%</title>
+                        </circle>
+                        <circle cx="575.8" cy="34.7" r="2.5" fill="#6D8791">
+                            <title>Zernike7 · L1 · k=7: 98.6111%</title>
+                        </circle>
+                        <circle cx="748.0" cy="43.3" r="2.5" fill="#6D8791">
+                            <title>Zernike7 · L1 · k=9: 97.2222%</title>
+                        </circle>
+                        <polyline fill="none" points="59.0,26.2 231.2,26.2 403.5,26.2 575.8,34.7 748.0,43.3"
+                            stroke="#CE5926" stroke-width="4.3" stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="59.0" cy="26.2" r="4.2" fill="#CE5926">
+                            <title>Vote · L1 · k=1: 100.0000%</title>
+                        </circle>
+                        <circle cx="231.2" cy="26.2" r="4.2" fill="#CE5926">
+                            <title>Vote · L1 · k=3: 100.0000%</title>
+                        </circle>
+                        <circle cx="403.5" cy="26.2" r="4.2" fill="#CE5926">
+                            <title>Vote · L1 · k=5: 100.0000%</title>
+                        </circle>
+                        <circle cx="575.8" cy="34.7" r="4.2" fill="#CE5926">
+                            <title>Vote · L1 · k=7: 98.6111%</title>
+                        </circle>
+                        <circle cx="748.0" cy="43.3" r="4.2" fill="#CE5926">
+                            <title>Vote · L1 · k=9: 97.2222%</title>
+                        </circle>
+                    </svg>
+                </div>
+                <div class="chart-box">
+                    <h3>Graph 2 — L2 (Euclidean)</h3><svg class="plot" viewBox="0 0 770 260" role="img"
+                        aria-label="Recognition rate by k for L2: five descriptors and voting">
+                        <line x1="59" y1="210.8" x2="748" y2="210.8" stroke="#dce4eb" stroke-width="1" /><text x="48"
+                            y="214.8" text-anchor="end" class="tick">70</text>
+                        <line x1="59" y1="149.3" x2="748" y2="149.3" stroke="#dce4eb" stroke-width="1" /><text x="48"
+                            y="153.3" text-anchor="end" class="tick">80</text>
+                        <line x1="59" y1="87.7" x2="748" y2="87.7" stroke="#dce4eb" stroke-width="1" /><text x="48"
+                            y="91.7" text-anchor="end" class="tick">90</text>
+                        <line x1="59" y1="26.2" x2="748" y2="26.2" stroke="#dce4eb" stroke-width="1" /><text x="48"
+                            y="30.2" text-anchor="end" class="tick">100</text><text x="59.0" y="238"
+                            text-anchor="middle" class="tick">1</text><text x="231.2" y="238" text-anchor="middle"
+                            class="tick">3</text><text x="403.5" y="238" text-anchor="middle" class="tick">5</text><text
+                            x="575.8" y="238" text-anchor="middle" class="tick">7</text><text x="748.0" y="238"
+                            text-anchor="middle" class="tick">9</text><text x="403.5" y="257" text-anchor="middle"
+                            class="axis">k</text><text x="9" y="28" class="axis">%</text>
+                        <polyline fill="none" points="59.0,26.2 231.2,34.7 403.5,34.7 575.8,43.3 748.0,51.8"
+                            stroke="#4B83B3" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="59.0" cy="26.2" r="2.5" fill="#4B83B3">
+                            <title>ART · L2 · k=1: 100.0000%</title>
+                        </circle>
+                        <circle cx="231.2" cy="34.7" r="2.5" fill="#4B83B3">
+                            <title>ART · L2 · k=3: 98.6111%</title>
+                        </circle>
+                        <circle cx="403.5" cy="34.7" r="2.5" fill="#4B83B3">
+                            <title>ART · L2 · k=5: 98.6111%</title>
+                        </circle>
+                        <circle cx="575.8" cy="43.3" r="2.5" fill="#4B83B3">
+                            <title>ART · L2 · k=7: 97.2222%</title>
+                        </circle>
+                        <circle cx="748.0" cy="51.8" r="2.5" fill="#4B83B3">
+                            <title>ART · L2 · k=9: 95.8333%</title>
+                        </circle>
+                        <polyline fill="none" points="59.0,26.2 231.2,34.7 403.5,34.7 575.8,34.7 748.0,51.8"
+                            stroke="#3C927F" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="59.0" cy="26.2" r="2.5" fill="#3C927F">
+                            <title>GFD · L2 · k=1: 100.0000%</title>
+                        </circle>
+                        <circle cx="231.2" cy="34.7" r="2.5" fill="#3C927F">
+                            <title>GFD · L2 · k=3: 98.6111%</title>
+                        </circle>
+                        <circle cx="403.5" cy="34.7" r="2.5" fill="#3C927F">
+                            <title>GFD · L2 · k=5: 98.6111%</title>
+                        </circle>
+                        <circle cx="575.8" cy="34.7" r="2.5" fill="#3C927F">
+                            <title>GFD · L2 · k=7: 98.6111%</title>
+                        </circle>
+                        <circle cx="748.0" cy="51.8" r="2.5" fill="#3C927F">
+                            <title>GFD · L2 · k=9: 95.8333%</title>
+                        </circle>
+                        <polyline fill="none" points="59.0,128.8 231.2,154.4 403.5,163.0 575.8,197.2 748.0,205.7"
+                            stroke="#8B6EA6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="59.0" cy="128.8" r="2.5" fill="#8B6EA6">
+                            <title>SA · L2 · k=1: 83.3333%</title>
+                        </circle>
+                        <circle cx="231.2" cy="154.4" r="2.5" fill="#8B6EA6">
+                            <title>SA · L2 · k=3: 79.1667%</title>
+                        </circle>
+                        <circle cx="403.5" cy="163.0" r="2.5" fill="#8B6EA6">
+                            <title>SA · L2 · k=5: 77.7778%</title>
+                        </circle>
+                        <circle cx="575.8" cy="197.2" r="2.5" fill="#8B6EA6">
+                            <title>SA · L2 · k=7: 72.2222%</title>
+                        </circle>
+                        <circle cx="748.0" cy="205.7" r="2.5" fill="#8B6EA6">
+                            <title>SA · L2 · k=9: 70.8333%</title>
+                        </circle>
+                        <polyline fill="none" points="59.0,51.8 231.2,43.3 403.5,51.8 575.8,68.9 748.0,68.9"
+                            stroke="#A4754B" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="59.0" cy="51.8" r="2.5" fill="#A4754B">
+                            <title>Yang · L2 · k=1: 95.8333%</title>
+                        </circle>
+                        <circle cx="231.2" cy="43.3" r="2.5" fill="#A4754B">
+                            <title>Yang · L2 · k=3: 97.2222%</title>
+                        </circle>
+                        <circle cx="403.5" cy="51.8" r="2.5" fill="#A4754B">
+                            <title>Yang · L2 · k=5: 95.8333%</title>
+                        </circle>
+                        <circle cx="575.8" cy="68.9" r="2.5" fill="#A4754B">
+                            <title>Yang · L2 · k=7: 93.0556%</title>
+                        </circle>
+                        <circle cx="748.0" cy="68.9" r="2.5" fill="#A4754B">
+                            <title>Yang · L2 · k=9: 93.0556%</title>
+                        </circle>
+                        <polyline fill="none" points="59.0,26.2 231.2,26.2 403.5,34.7 575.8,43.3 748.0,51.8"
+                            stroke="#6D8791" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="59.0" cy="26.2" r="2.5" fill="#6D8791">
+                            <title>Zernike7 · L2 · k=1: 100.0000%</title>
+                        </circle>
+                        <circle cx="231.2" cy="26.2" r="2.5" fill="#6D8791">
+                            <title>Zernike7 · L2 · k=3: 100.0000%</title>
+                        </circle>
+                        <circle cx="403.5" cy="34.7" r="2.5" fill="#6D8791">
+                            <title>Zernike7 · L2 · k=5: 98.6111%</title>
+                        </circle>
+                        <circle cx="575.8" cy="43.3" r="2.5" fill="#6D8791">
+                            <title>Zernike7 · L2 · k=7: 97.2222%</title>
+                        </circle>
+                        <circle cx="748.0" cy="51.8" r="2.5" fill="#6D8791">
+                            <title>Zernike7 · L2 · k=9: 95.8333%</title>
+                        </circle>
+                        <polyline fill="none" points="59.0,26.2 231.2,26.2 403.5,34.7 575.8,34.7 748.0,43.3"
+                            stroke="#CE5926" stroke-width="4.3" stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="59.0" cy="26.2" r="4.2" fill="#CE5926">
+                            <title>Vote · L2 · k=1: 100.0000%</title>
+                        </circle>
+                        <circle cx="231.2" cy="26.2" r="4.2" fill="#CE5926">
+                            <title>Vote · L2 · k=3: 100.0000%</title>
+                        </circle>
+                        <circle cx="403.5" cy="34.7" r="4.2" fill="#CE5926">
+                            <title>Vote · L2 · k=5: 98.6111%</title>
+                        </circle>
+                        <circle cx="575.8" cy="34.7" r="4.2" fill="#CE5926">
+                            <title>Vote · L2 · k=7: 98.6111%</title>
+                        </circle>
+                        <circle cx="748.0" cy="43.3" r="4.2" fill="#CE5926">
+                            <title>Vote · L2 · k=9: 97.2222%</title>
+                        </circle>
+                    </svg>
+                </div>
+            </div>
+            <p class="foot">Both graphs use the same vertical scale (69–101%). The thicker orange line is the majority
+                vote.</p>
+        </section>
+        <section class="section">
+            <h2>Interpretation</h2>
+            <div class="explain">
+                <article>
+                    <h3>A · Does voting beat the best descriptor?</h3>
+                    <p>Voting ties the strongest individual result in nine settings. Only at <b>L2, k=9</b> does it win:
+                        <b>70/72 versus 69/72</b> (+1.3889 pp). It adds some value, but the overall evidence is mainly
+                        that aggregation <b>preserves</b> the strongest accuracy rather than consistently improving it.
+                        Comparing against SA alone would exaggerate the benefit.</p>
+                </article>
+                <article>
+                    <h3>B · Does distance change voting?</h3>
+                    <p>L1 and L2 give identical vote scores at k=1, 3, 7 and 9. At <b>k=5</b>, L1 classifies one more
+                        image correctly (72 versus 71). Thus L1 is <b>slightly better</b>, not decisively better; the
+                        difference is only one result among 72 images.</p>
+                </article>
+                <article>
+                    <h3>C · Does increasing k help?</h3>
+                    <p><b>L1:</b> 100 → 100 → 100 → 98.6111 → 97.2222. <b>L2:</b> 100 → 100 → 98.6111 → 98.6111 →
+                        97.2222. Larger k does not improve the vote here. A wider neighborhood can include images from
+                        competing classes, weakening local discrimination; the aggregate rates alone cannot prove this
+                        is the exact cause.</p>
+                </article>
+                <article>
+                    <h3>D · Is voting more robust?</h3>
+                    <p>Voting loses only <b>2 correct images</b> from its best to worst k for each distance. SA loses
+                        <b>8 images with L1</b> and <b>9 with L2</b>; most other descriptors vary by 3. Voting is
+                        therefore comparatively stable, but <b>ART and Zernike7 with L1 also vary by only 2</b>. We
+                        cannot infer which image-level errors were fixed without individual predictions.</p>
+                </article>
+            </div>
+        </section>
+        <p class="foot">Sources: individual-descriptor results from <code>experiment2_terminal.txt</code> (50
+            configurations); majority voting from <code>experiment2_vote_6classes.csv</code> (10 configurations). The
+            Experiment 1 CSV itself was not attached. Rates are reported exactly as supplied, with one image ≈ 1.3889
+            pp.</p>
+    </main>
+</body>
+
+</html>

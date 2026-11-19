@@ -95,6 +95,14 @@ PredictionsBySetting runVoting(const KnnPredictions& knn) {
     printSection("2.c. Majority vote (leave-one-out)");
 
     PredictionsBySetting results;
+
+    std::filesystem::create_directories("results");
+    std::ofstream csv("results/experiment2_vote_6classes.csv");
+    if (!csv) {
+        throw std::runtime_error("Cannot create voting CSV");
+    }
+    csv << "distance,k,correct,total,recognition_rate_percent\n";
+
     for (DistanceType type : {DistanceType::Euclidean, DistanceType::Manhattan}) {
         for (int k : neighborCounts) {
             const auto setting = std::make_pair(type, k);
@@ -110,6 +118,11 @@ PredictionsBySetting runVoting(const KnnPredictions& knn) {
             }
 
             const Accuracy accuracy = classificationAccuracy(result.truth, result.predicted);
+
+            csv << (type == DistanceType::Euclidean ? "L2" : "L1") << "," << k << ","
+                << accuracy.correct << "," << result.truth.size() << "," << std::fixed
+                << std::setprecision(4) << accuracy.percent << "\n";
+
             std::cout << "vote | " << (type == DistanceType::Euclidean ? "L2" : "L1")
                       << " | k: " << k << " | recognition rate: " << accuracy.percent << "%\n";
         }

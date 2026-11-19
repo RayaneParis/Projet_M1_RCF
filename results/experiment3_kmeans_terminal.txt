@@ -1,0 +1,14 @@
+72 samples loaded
+all samples have the expected descriptor dimensions
+
+======================= 2.b. K-means clustering (K = 6, 20 initializations) =======================
+ART | SSE: 1.36215 | iterations: 3 | purity: 98.6111%
+ART | purity min/mean/max (%): 65.2778 / 81.5278 / 98.6111 | SSE min/max: 1.36215 / 3.38568
+GFD | SSE: 1.98804 | iterations: 5 | purity: 97.2222%
+GFD | purity min/mean/max (%): 63.8889 / 80.9028 / 97.2222 | SSE min/max: 1.98804 / 3.36784
+SA | SSE: 0.196073 | iterations: 16 | purity: 54.1667%
+SA | purity min/mean/max (%): 50 / 66.1806 / 77.7778 | SSE min/max: 0.196073 / 0.395674
+Yang | SSE: 0.0688465 | iterations: 3 | purity: 79.1667%
+Yang | purity min/mean/max (%): 61.1111 / 77.6389 / 94.4444 | SSE min/max: 0.0688465 / 0.255576
+Zernike7 | SSE: 4.11536e+08 | iterations: 5 | purity: 97.2222%
+Zernike7 | purity min/mean/max (%): 66.6667 / 82.2222 / 98.6111 | SSE min/max: 4.11536e+08 / 7.58496e+08
