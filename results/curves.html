@@ -1,0 +1,1616 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description"
+        content="Complete 18-class SharvitB2 section 3.c: precision–recall curves and trapezoidal PR-AUC using 12-neighbour k-NN and majority voting. Based on 216 leave-one-out evaluations.">
+    <title>Section 3.c | Precision–Recall Curves & AUC | 18 classes</title>
+    <style>
+        :root {
+            --ink: #1d3140;
+            --navy: #163245;
+            --teal: #167178;
+            --muted: #5c7080;
+            --line: #d6e2e6;
+            --soft: #f3f8f9;
+            --page: #e7edf0;
+            --gold: #b78d54
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html {
+            scroll-behavior: smooth
+        }
+
+        body {
+            margin: 0;
+            background: var(--page);
+            font: 16px/1.63 Georgia, 'Times New Roman', serif;
+            color: var(--ink)
+        }
+
+        a {
+            color: #096e79;
+            text-underline-offset: 3px
+        }
+
+        code {
+            font: 13px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+            color: #164956
+        }
+
+        .top {
+            position: sticky;
+            top: 0;
+            z-index: 9;
+            background: var(--navy);
+            box-shadow: 0 4px 12px #11263929
+        }
+
+        .top>div {
+            max-width: 1100px;
+            margin: auto;
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            padding: 11px 25px;
+            flex-wrap: wrap;
+            font: 500 13px system-ui, sans-serif
+        }
+
+        .top a {
+            color: #d4e8e9;
+            text-decoration: none
+        }
+
+        .top .brand {
+            color: #fff;
+            font-weight: 750;
+            margin-right: auto
+        }
+
+        .top button {
+            background: #274a5c;
+            color: #fff;
+            border: 1px solid #59778b;
+            padding: 6px 13px;
+            border-radius: 5px;
+            cursor: pointer;
+            font: inherit
+        }
+
+        .paper {
+            max-width: 1100px;
+            margin: 26px auto 55px;
+            background: #fff;
+            box-shadow: 0 12px 44px #13324214;
+            border: 1px solid var(--line)
+        }
+
+        .hero {
+            background: linear-gradient(116deg, #153349, #21616a);
+            color: #fff;
+            padding: 52px 65px 45px
+        }
+
+        .kicker {
+            font: 730 12px/1.3 system-ui, sans-serif;
+            color: #a2dedc;
+            letter-spacing: .17em;
+            text-transform: uppercase;
+            margin: 0 0 15px
+        }
+
+        h1 {
+            font: 760 clamp(30px, 4.1vw, 48px)/1.15 system-ui, sans-serif;
+            letter-spacing: -.035em;
+            margin: 0 0 14px
+        }
+
+        h2 {
+            font: 750 26px/1.24 system-ui, sans-serif;
+            letter-spacing: -.025em;
+            color: var(--navy);
+            margin: 0 0 16px
+        }
+
+        h3 {
+            font: 735 19px/1.3 system-ui, sans-serif;
+            color: var(--navy);
+            margin: 23px 0 9px
+        }
+
+        .hero p {
+            font: 17px/1.55 system-ui, sans-serif;
+            color: #deebeb;
+            max-width: 890px;
+            margin: 0
+        }
+
+        .chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 22px 0 0
+        }
+
+        .chips span {
+            font: 650 12px/1.4 system-ui, sans-serif;
+            border: 1px solid #ffffff60;
+            padding: 5px 12px;
+            border-radius: 30px
+        }
+
+        .content {
+            padding: 40px 65px 50px
+        }
+
+        section {
+            margin: 0 0 43px
+        }
+
+        p {
+            margin: 8px 0 13px
+        }
+
+        .assignment {
+            margin-bottom: 23px;
+            padding: 17px 22px;
+            border-left: 4px solid var(--gold);
+            background: #fbf8f2
+        }
+
+        .assignment span {
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: .09em;
+            font: 730 12px system-ui, sans-serif;
+            color: #886035;
+            margin-bottom: 6px
+        }
+
+        .assignment p {
+            font-size: 18px;
+            margin: 0
+        }
+
+        .kpis {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 20px 0 29px
+        }
+
+        .kpi {
+            border-top: 3px solid var(--teal);
+            padding-top: 12px;
+            font: 13px/1.45 system-ui, sans-serif;
+            color: var(--muted)
+        }
+
+        .kpi b {
+            display: block;
+            font: 760 29px/1.2 system-ui, sans-serif;
+            color: var(--navy)
+        }
+
+        .subhead {
+            color: var(--muted);
+            font: 14px/1.5 system-ui, sans-serif;
+            margin: 0 0 14px
+        }
+
+        .formula {
+            border: 1px solid #d9e8e9;
+            background: #f4f9f9;
+            padding: 14px 15px;
+            text-align: center;
+            margin: 16px 0;
+            font: 20px/1.85 Georgia, serif
+        }
+
+        .formula .eq {
+            display: block
+        }
+
+        .formula small {
+            color: var(--muted);
+            font: 14px/1.6 system-ui, sans-serif
+        }
+
+        .aside {
+            background: #f5f8f9;
+            border-left: 3px solid #8fb6bc;
+            padding: 14px 18px;
+            margin: 18px 0;
+            font-size: 15px
+        }
+
+        .aside.warn {
+            background: #fdf8ef;
+            border-color: #c39454
+        }
+
+        .aside p:last-child {
+            margin-bottom: 0
+        }
+
+        .flow {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+            margin: 20px 0
+        }
+
+        .flow span {
+            flex: 1;
+            background: #f2f7f7;
+            border: 1px solid #d3e5e7;
+            padding: 10px 8px;
+            text-align: center;
+            font: 650 13px/1.4 system-ui, sans-serif
+        }
+
+        .flow i {
+            align-self: center;
+            font: 22px/1 sans-serif;
+            color: var(--teal)
+        }
+
+        .figure {
+            border: 1px solid var(--line);
+            padding: 21px 24px 19px;
+            margin: 25px 0;
+            background: #fff;
+            break-inside: avoid
+        }
+
+        .figure-title {
+            font: 760 18px/1.3 system-ui, sans-serif;
+            color: var(--navy)
+        }
+
+        .figure-sub {
+            font: 13px/1.5 system-ui, sans-serif;
+            color: var(--muted);
+            margin: 5px 0 13px
+        }
+
+        .chart-svg {
+            width: 100%;
+            height: auto;
+            display: block
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 10px 20px;
+            flex-wrap: wrap;
+            margin: 11px 0 0
+        }
+
+        .legend-entry {
+            font: 13px/1.4 system-ui, sans-serif;
+            white-space: nowrap;
+            display: inline-flex;
+            gap: 5px;
+            align-items: center
+        }
+
+        .legend-entry i,
+        .bar-label i {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            flex: none;
+            margin-right: 5px
+        }
+
+        .legend-entry span {
+            color: var(--muted)
+        }
+
+        figcaption {
+            margin-top: 12px;
+            font: 14px/1.52 system-ui, sans-serif;
+            color: #526878
+        }
+
+        .bar-row {
+            display: grid;
+            grid-template-columns: 142px 1fr 89px;
+            align-items: center;
+            gap: 15px;
+            margin: 12px 0;
+            font: 14px/1.5 system-ui, sans-serif
+        }
+
+        .bar-row strong {
+            text-align: right;
+            color: var(--navy);
+            font-variant-numeric: tabular-nums
+        }
+
+        .bar-label {
+            font-weight: 650
+        }
+
+        .track {
+            height: 17px;
+            background: #e8eff0;
+            border-radius: 3px;
+            overflow: hidden
+        }
+
+        .fill {
+            height: 100%;
+            border-radius: 3px
+        }
+
+        .barbox {
+            border: 1px solid var(--line);
+            padding: 19px 23px;
+            margin: 21px 0
+        }
+
+        .barbox .subhead {
+            margin: 0 0 18px
+        }
+
+        .controls {
+            background: var(--soft);
+            padding: 14px 16px;
+            margin: 15px 0 0;
+            border: 1px solid #dce8e8;
+            font: 13px/1.5 system-ui, sans-serif
+        }
+
+        .controls strong {
+            display: block;
+            margin-bottom: 9px;
+            color: var(--navy)
+        }
+
+        .class-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px
+        }
+
+        .class-buttons button {
+            border: 1px solid #b4c9ce;
+            background: #fff;
+            color: var(--navy);
+            border-radius: 5px;
+            min-width: 42px;
+            padding: 7px 9px;
+            font-weight: 700;
+            cursor: pointer
+        }
+
+        .class-buttons button[aria-pressed=true] {
+            color: #fff;
+            background: #1e5866;
+            border-color: #1e5866
+        }
+
+        .methods {
+            display: flex;
+            gap: 7px 15px;
+            flex-wrap: wrap;
+            margin-top: 14px
+        }
+
+        .methods label {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 650
+        }
+
+        .methods label i {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px
+        }
+
+        .methods input {
+            accent-color: #235a69
+        }
+
+        .plot-placeholder {
+            margin-top: 14px
+        }
+
+        .aux {
+            color: var(--muted);
+            font: 13px/1.5 system-ui, sans-serif
+        }
+
+        .gridtable {
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            margin-top: 19px
+        }
+
+        .gridtable table {
+            width: 100%;
+            border-collapse: collapse;
+            white-space: nowrap;
+            font: 13px/1.4 system-ui, sans-serif;
+            font-variant-numeric: tabular-nums
+        }
+
+        .gridtable thead th {
+            background: #eaf2f3;
+            font-weight: 760;
+            color: #334d60;
+            text-align: right;
+            padding: 11px 8px;
+            border-bottom: 2px solid #c0d1d5
+        }
+
+        .gridtable thead th:first-child,
+        .gridtable tbody th {
+            text-align: left
+        }
+
+        .gridtable tbody th {
+            font-weight: 740;
+            color: #314d61;
+            padding: 9px 10px;
+            background: #f7f9f9;
+            border-bottom: 1px solid #e4ecee
+        }
+
+        .gridtable td {
+            text-align: right;
+            padding: 9px 8px;
+            border-bottom: 1px solid #e4ecee
+        }
+
+        .gridtable tbody tr:nth-child(2n) td {
+            background: #fafcfc
+        }
+
+        .gridtable td.best {
+            color: #086747;
+            background: #e3f3eb !important;
+            font-weight: 740
+        }
+
+        .gridtable td.weak {
+            color: #953e2d;
+            background: #fbe8e2 !important;
+            font-weight: 740
+        }
+
+        .gridtable td.mediocre {
+            color: #855b2b;
+            background: #fff5e9 !important
+        }
+
+        .gridtable tr.macro-row td,
+        .gridtable tr.macro-row th {
+            background: #e5f0f0 !important;
+            border-top: 2px solid #b6cbcc;
+            font-weight: 800
+        }
+
+        .gridtable.slim {
+            max-width: 720px
+        }
+
+        .gridtable.slim table {
+            font-size: 14px
+        }
+
+        .gridtable.slim td,
+        .gridtable.slim th {
+            padding: 8px 13px
+        }
+
+        .table-caption {
+            font: 13px/1.5 system-ui, sans-serif;
+            color: var(--muted);
+            margin-top: 9px
+        }
+
+        .findings {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 22px
+        }
+
+        .finding {
+            padding: 17px 19px;
+            border: 1px solid #d6e1e4;
+            border-top: 3px solid #357a83;
+            background: #fcfdfd
+        }
+
+        .finding h3 {
+            font-size: 16px;
+            margin: 0 0 8px
+        }
+
+        .finding p {
+            font-size: 15px;
+            line-height: 1.55;
+            margin: 0
+        }
+
+        .answer {
+            border-left: 5px solid var(--teal);
+            background: #f3f8f8;
+            padding: 24px 26px;
+            margin-top: 23px
+        }
+
+        .answer h3 {
+            margin-top: 0
+        }
+
+        .answer p {
+            margin-bottom: 12px
+        }
+
+        .answer p:last-child {
+            margin-bottom: 0
+        }
+
+        footer {
+            padding: 18px 65px 23px;
+            border-top: 1px solid #dfe8e9;
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            color: var(--muted);
+            font: 12px/1.5 system-ui, sans-serif
+        }
+
+        @media(max-width:900px) {
+            .paper {
+                margin: 0;
+                border: 0
+            }
+
+            .hero {
+                padding: 35px 25px
+            }
+
+            .content {
+                padding: 29px 25px 36px
+            }
+
+            .kpis {
+                grid-template-columns: repeat(2, 1fr)
+            }
+
+            footer {
+                padding: 16px 25px
+            }
+
+            .findings {
+                grid-template-columns: 1fr
+            }
+
+            .bar-row {
+                grid-template-columns: 100px 1fr 78px;
+                gap: 8px
+            }
+
+            .figure {
+                padding: 13px
+            }
+        }
+
+        @media(max-width:540px) {
+            .kpis {
+                grid-template-columns: repeat(2, minmax(0, 1fr))
+            }
+
+            .top>div {
+                gap: 11px
+            }
+
+            .hero {
+                padding: 27px 18px
+            }
+
+            .content {
+                padding: 23px 16px 33px
+            }
+
+            .flow {
+                flex-wrap: wrap
+            }
+
+            .flow span {
+                min-width: 110px
+            }
+
+            .flow i {
+                display: none
+            }
+
+            .bar-row {
+                grid-template-columns: 89px 1fr 70px;
+                font-size: 12px
+            }
+
+            .figure {
+                padding: 10px
+            }
+
+            .legend-entry {
+                font-size: 11px
+            }
+        }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 15mm 13mm
+            }
+
+            .top {
+                display: none
+            }
+
+            .paper {
+                box-shadow: none;
+                border: 0;
+                max-width: none;
+                margin: 0
+            }
+
+            .hero {
+                padding: 18px 23px;
+                color: #153349;
+                background: white;
+                border-bottom: 2px solid #c4d7d9
+            }
+
+            .hero p {
+                color: #48616a
+            }
+
+            .hero .kicker {
+                color: #167178
+            }
+
+            .chips span {
+                border-color: #bfd1d6;
+                color: #30495b
+            }
+
+            .content {
+                padding: 21px 12px
+            }
+
+            .figure {
+                break-inside: avoid
+            }
+
+            section {
+                break-inside: auto
+            }
+
+            .controls {
+                display: none
+            }
+
+            .interactive-section {
+                break-before: page
+            }
+
+            h2,
+            h3 {
+                break-after: avoid
+            }
+
+            .gridtable table {
+                font-size: 10px
+            }
+
+            .gridtable td,
+            .gridtable th {
+                padding: 5px 5px !important
+            }
+
+            .bar-row {
+                margin: 8px 0
+            }
+
+            .answer {
+                break-inside: avoid
+            }
+
+            footer {
+                padding: 12px
+            }
+
+            .figure .chart-svg {
+                max-height: 290px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="top">
+        <div><span class="brand">SharvitB2 · Section 3.c</span><a href="#protocol">Protocol</a><a href="#curves">PR
+                curves</a><a href="#all-curves">All 18 classes</a><a href="#results">AUC results</a><a
+                href="#conclusion">Answer</a><button type="button" onclick="window.print()">Print / PDF</button></div>
+    </nav>
+    <article class="paper">
+        
+        <div class="content">
+            <section id="protocol">
+                <div class="assignment"><span>Professor's question — Section 3.c</span>
+                    <p>“Courbe précision/rappel (et AUC) avec K = 12 (2.a et 2.c).”</p>
+                </div>
+                <h2>1. Experimental protocol</h2>
+                <p>We evaluate the <strong>five descriptor-based k-nearest-neighbour classifiers</strong> (Section 2.a)
+                    and the <strong>majority-vote combination</strong> of their predicted classes (Section 2.c). All 18
+                    classes of SharvitB2 are included: 12 images per class, for a total of 216 samples.</p>
+                <div class="kpis">
+                    <div class="kpi"><b>216</b>test images evaluated</div>
+                    <div class="kpi"><b>18</b>classes × 12 images</div>
+                    <div class="kpi"><b>6</b>scoring approaches</div>
+                    <div class="kpi"><b>108</b>one-vs-rest PR curves</div>
+                </div>
+                <p><strong>Leave-one-out (LOO):</strong> for each of the 216 queries, the image is excluded from the
+                    reference set and its 12 nearest neighbours are drawn from the other 215 images. We use the
+                    Euclidean distance <strong>L2</strong>. The experiment makes 216 held-out predictions/scores per
+                    approach, and derives one curve for each of the 18 classes.</p>
+                <div class="flow"><span>216 descriptors per approach</span><i>→</i><span>LOO: 215
+                        references</span><i>→</i><span>12 nearest neighbours</span><i>→</i><span>One-vs-rest class
+                        scores</span><i>→</i><span>PR curves and AUC</span></div>
+                <div class="aside"><strong>Important distinction.</strong> Here <em>K = 12</em> means twelve nearest
+                    neighbours, <em>not</em> twelve classes. Although each class has 12 images overall, for a query from
+                    that class there are only 11 other same-class examples in the reference set. The 12th neighbour must
+                    therefore come from some other class.</div>
+            </section>
+            <section id="method">
+                <h2>2. How precision–recall curves are constructed</h2>
+                <h3>Class scores</h3>
+                <p>For each class <em>C</em>, we use a one-vs-rest assessment: its <strong>12 members</strong> are
+                    positive examples and the other <strong>204</strong> images are negative examples. For each held-out
+                    query, the system produces a score for class C.</p>
+                <div class="formula"><span class="eq">k-NN score: <strong>s(x, C) = [number of C-labelled images among
+                            12 neighbours] / 12</strong></span><span class="eq">Vote score: <strong>v(x, C) = [number of
+                            descriptors predicting C] / 5</strong></span></div>
+                <p>Each of ART, GFD, SA, Yang and Zernike7 produces its own k-NN score. For the majority-vote curve, the
+                    score is the fraction of the five descriptor-level decisions supporting the class. Note that the
+                    second score contains only six possible values (0, 0.2, …, 1), so its curve generally has fewer
+                    threshold steps than individual k-NN curves.</p>
+                <h3>Threshold, precision and recall</h3>
+                <p>Starting above the highest score, no image is selected: the curve starts at (recall 0, precision 1)
+                    by convention. As the threshold decreases, all images that have the same score are added
+                    simultaneously. Precision and recall are recalculated after each group is admitted.</p>
+                <div class="formula"><span class="eq"><strong>Precision = TP / (TP + FP)</strong> &nbsp;&nbsp;&nbsp;
+                        <strong>Recall = TP / (TP + FN)</strong></span><small>TP = true positives; FP = false positives;
+                        FN = false negatives.</small></div>
+                <p>When the threshold reaches zero, all 216 images are selected, so recall reaches 1 and precision
+                    reaches <strong>12/216 = 0.055556</strong>. This is the positive-class prevalence (5.56%) and
+                    provides a reference level for interpretation. It is not the initial point of the curve.</p>
+                <h3>Area under the curve (PR-AUC)</h3>
+                <p>The supplied C++ code computes the area using the trapezoidal rule over the successive
+                    precision–recall points:</p>
+                <div class="formula"><span class="eq"><strong>PR-AUC = Σ<sub>i=1…m</sub> (R<sub>i</sub> −
+                            R<sub>i−1</sub>) × (P<sub>i</sub> + P<sub>i−1</sub>)/2</strong></span><span
+                        class="eq"><strong>Macro PR-AUC = (1/18) × Σ<sub>c=1…18</sub> PR-AUC<sub>c</sub></strong></span>
+                </div>
+                <p>This is <strong>trapezoidal PR-AUC</strong>, not ROC-AUC or Average Precision (AP). The curves use
+                    actual discrete score thresholds and are connected by straight segments in that order.</p>
+            </section>
+            <section id="curves">
+                <h2>3. Actual precision–recall curves</h2>
+                <p>These figures plot coordinates from your new <code>curves.csv</code>, covering all 18 classes in the
+                    experiment. Three classes illustrate distinct patterns; the interactive explorer below provides the
+                    full set of 108 curves.</p>
+                <figure class="figure">
+                    <div class="figure-title">Figure 1 — Class 13 — strong descriptors versus weak representations</div>
+                    <div class="figure-sub">LOO · 216 queries · 12 neighbours · Euclidean (L2) · one-versus-rest</div>
+                    <svg class="chart-svg" viewBox="0 0 932 352" role="img"
+                        aria-label="Observed precision–recall curves for class 13">
+                        <rect width="932" height="352" fill="#fff" />
+                        <line x1="61.00" y1="18" x2="61.00" y2="292" stroke="#e4ebee" />
+                        <line x1="61" y1="292.00" x2="899" y2="292.00" stroke="#e4ebee" /><text x="61.00" y="314"
+                            text-anchor="middle" fill="#607281" font-size="13">0.0</text><text x="50" y="296.00"
+                            text-anchor="end" fill="#607281" font-size="13">0.0</text>
+                        <line x1="228.60" y1="18" x2="228.60" y2="292" stroke="#e4ebee" />
+                        <line x1="61" y1="237.20" x2="899" y2="237.20" stroke="#e4ebee" /><text x="228.60" y="314"
+                            text-anchor="middle" fill="#607281" font-size="13">0.2</text><text x="50" y="241.20"
+                            text-anchor="end" fill="#607281" font-size="13">0.2</text>
+                        <line x1="396.20" y1="18" x2="396.20" y2="292" stroke="#e4ebee" />
+                        <line x1="61" y1="182.40" x2="899" y2="182.40" stroke="#e4ebee" /><text x="396.20" y="314"
+                            text-anchor="middle" fill="#607281" font-size="13">0.4</text><text x="50" y="186.40"
+                            text-anchor="end" fill="#607281" font-size="13">0.4</text>
+                        <line x1="563.80" y1="18" x2="563.80" y2="292" stroke="#e4ebee" />
+                        <line x1="61" y1="127.60" x2="899" y2="127.60" stroke="#e4ebee" /><text x="563.80" y="314"
+                            text-anchor="middle" fill="#607281" font-size="13">0.6</text><text x="50" y="131.60"
+                            text-anchor="end" fill="#607281" font-size="13">0.6</text>
+                        <line x1="731.40" y1="18" x2="731.40" y2="292" stroke="#e4ebee" />
+                        <line x1="61" y1="72.80" x2="899" y2="72.80" stroke="#e4ebee" /><text x="731.40" y="314"
+                            text-anchor="middle" fill="#607281" font-size="13">0.8</text><text x="50" y="76.80"
+                            text-anchor="end" fill="#607281" font-size="13">0.8</text>
+                        <line x1="899.00" y1="18" x2="899.00" y2="292" stroke="#e4ebee" />
+                        <line x1="61" y1="18.00" x2="899" y2="18.00" stroke="#e4ebee" /><text x="899.00" y="314"
+                            text-anchor="middle" fill="#607281" font-size="13">1.0</text><text x="50" y="22.00"
+                            text-anchor="end" fill="#607281" font-size="13">1.0</text>
+                        <path d="M61,18V292H899" fill="none" stroke="#8fa2ac" stroke-width="1.2" /><text x="480.0"
+                            y="345" text-anchor="middle" fill="#334b5c" font-size="15"
+                            font-weight="600">Recall</text><text x="19" y="155.0" transform="rotate(-90 19 155.0)"
+                            text-anchor="middle" fill="#334b5c" font-size="15" font-weight="600">Precision</text>
+                        <polyline
+                            points="61.00,18.00 340.33,18.00 899.00,39.08 899.00,135.43 899.00,149.04 899.00,178.62 899.00,203.14 899.00,276.78"
+                            stroke="#16816B" stroke-width="2.7" fill="none" stroke-linejoin="round"
+                            stroke-linecap="round" />
+                        <circle cx="61.00" cy="18.00" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="340.33" cy="18.00" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="39.08" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="135.43" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="149.04" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="178.62" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="203.14" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="276.78" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <polyline points="61.00,18.00 480.00,18.00 549.83,18.00 899.00,39.08 899.00,276.78"
+                            stroke="#7865B0" stroke-width="2.7" fill="none" stroke-linejoin="round"
+                            stroke-linecap="round" />
+                        <circle cx="61.00" cy="18.00" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                        <circle cx="480.00" cy="18.00" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                        <circle cx="549.83" cy="18.00" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="39.08" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="276.78" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                        <polyline
+                            points="61.00,18.00 61.00,292.00 130.83,246.33 200.67,223.50 759.33,139.78 899.00,142.55 899.00,160.48 899.00,178.62 899.00,192.36 899.00,276.78"
+                            stroke="#22669A" stroke-width="2.7" fill="none" stroke-linejoin="round"
+                            stroke-linecap="round" />
+                        <circle cx="61.00" cy="18.00" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="61.00" cy="292.00" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="130.83" cy="246.33" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="200.67" cy="223.50" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="759.33" cy="139.78" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="142.55" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="160.48" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="178.62" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="192.36" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="276.78" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                        <polyline
+                            points="61.00,18.00 61.00,292.00 61.00,292.00 340.33,223.50 410.17,247.81 689.50,259.12 899.00,276.78"
+                            stroke="#C07A35" stroke-width="2.7" fill="none" stroke-linejoin="round"
+                            stroke-linecap="round" />
+                        <circle cx="61.00" cy="18.00" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                        <circle cx="61.00" cy="292.00" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                        <circle cx="61.00" cy="292.00" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                        <circle cx="340.33" cy="223.50" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                        <circle cx="410.17" cy="247.81" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                        <circle cx="689.50" cy="259.12" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="276.78" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                        <polyline
+                            points="61.00,18.00 200.67,18.00 340.33,18.00 549.83,78.89 899.00,142.55 899.00,276.78"
+                            stroke="#20394A" stroke-width="4" stroke-dasharray="10 5" fill="none"
+                            stroke-linejoin="round" stroke-linecap="round" />
+                        <circle cx="61.00" cy="18.00" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="200.67" cy="18.00" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="340.33" cy="18.00" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="549.83" cy="78.89" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="142.55" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="276.78" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                    </svg>
+                    <div class="chart-legend"><span class="legend-entry"><i style="background:#16816B"></i><b>GFD</b>
+                            <span>AUC 0.974359</span></span><span class="legend-entry"><i
+                                style="background:#7865B0"></i><b>Zernike7</b> <span>AUC 0.983974</span></span><span
+                            class="legend-entry"><i style="background:#22669A"></i><b>ART</b> <span>AUC
+                                0.384575</span></span><span class="legend-entry"><i
+                                style="background:#C07A35"></i><b>SA</b> <span>AUC 0.127630</span></span><span
+                            class="legend-entry"><i style="background:#20394A"></i><b>Majority vote</b> <span>AUC
+                                0.831229</span></span></div>
+                    <figcaption>SA achieves just 0.127630 and ART 0.384575, while GFD reaches 0.974359 and Zernike7
+                        0.983974. Voting is lower than either strong descriptor at 0.831229.</figcaption>
+                </figure>
+                <figure class="figure">
+                    <div class="figure-title">Figure 2 — Class 18 — the weakest SA result</div>
+                    <div class="figure-sub">LOO · 216 queries · 12 neighbours · Euclidean (L2) · one-versus-rest</div>
+                    <svg class="chart-svg" viewBox="0 0 932 352" role="img"
+                        aria-label="Observed precision–recall curves for class 18">
+                        <rect width="932" height="352" fill="#fff" />
+                        <line x1="61.00" y1="18" x2="61.00" y2="292" stroke="#e4ebee" />
+                        <line x1="61" y1="292.00" x2="899" y2="292.00" stroke="#e4ebee" /><text x="61.00" y="314"
+                            text-anchor="middle" fill="#607281" font-size="13">0.0</text><text x="50" y="296.00"
+                            text-anchor="end" fill="#607281" font-size="13">0.0</text>
+                        <line x1="228.60" y1="18" x2="228.60" y2="292" stroke="#e4ebee" />
+                        <line x1="61" y1="237.20" x2="899" y2="237.20" stroke="#e4ebee" /><text x="228.60" y="314"
+                            text-anchor="middle" fill="#607281" font-size="13">0.2</text><text x="50" y="241.20"
+                            text-anchor="end" fill="#607281" font-size="13">0.2</text>
+                        <line x1="396.20" y1="18" x2="396.20" y2="292" stroke="#e4ebee" />
+                        <line x1="61" y1="182.40" x2="899" y2="182.40" stroke="#e4ebee" /><text x="396.20" y="314"
+                            text-anchor="middle" fill="#607281" font-size="13">0.4</text><text x="50" y="186.40"
+                            text-anchor="end" fill="#607281" font-size="13">0.4</text>
+                        <line x1="563.80" y1="18" x2="563.80" y2="292" stroke="#e4ebee" />
+                        <line x1="61" y1="127.60" x2="899" y2="127.60" stroke="#e4ebee" /><text x="563.80" y="314"
+                            text-anchor="middle" fill="#607281" font-size="13">0.6</text><text x="50" y="131.60"
+                            text-anchor="end" fill="#607281" font-size="13">0.6</text>
+                        <line x1="731.40" y1="18" x2="731.40" y2="292" stroke="#e4ebee" />
+                        <line x1="61" y1="72.80" x2="899" y2="72.80" stroke="#e4ebee" /><text x="731.40" y="314"
+                            text-anchor="middle" fill="#607281" font-size="13">0.8</text><text x="50" y="76.80"
+                            text-anchor="end" fill="#607281" font-size="13">0.8</text>
+                        <line x1="899.00" y1="18" x2="899.00" y2="292" stroke="#e4ebee" />
+                        <line x1="61" y1="18.00" x2="899" y2="18.00" stroke="#e4ebee" /><text x="899.00" y="314"
+                            text-anchor="middle" fill="#607281" font-size="13">1.0</text><text x="50" y="22.00"
+                            text-anchor="end" fill="#607281" font-size="13">1.0</text>
+                        <path d="M61,18V292H899" fill="none" stroke="#8fa2ac" stroke-width="1.2" /><text x="480.0"
+                            y="345" text-anchor="middle" fill="#334b5c" font-size="15"
+                            font-weight="600">Recall</text><text x="19" y="155.0" transform="rotate(-90 19 155.0)"
+                            text-anchor="middle" fill="#334b5c" font-size="15" font-weight="600">Precision</text>
+                        <polyline
+                            points="61.00,18.00 480.00,57.14 689.50,45.40 759.33,42.91 829.17,40.83 829.17,60.15 899.00,57.14 899.00,72.80 899.00,86.50 899.00,195.29 899.00,276.78"
+                            stroke="#16816B" stroke-width="2.7" fill="none" stroke-linejoin="round"
+                            stroke-linecap="round" />
+                        <circle cx="61.00" cy="18.00" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="480.00" cy="57.14" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="689.50" cy="45.40" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="759.33" cy="42.91" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="829.17" cy="40.83" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="829.17" cy="60.15" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="57.14" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="72.80" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="86.50" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="195.29" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="276.78" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <polyline
+                            points="61.00,18.00 61.00,292.00 130.83,252.86 200.67,264.60 549.83,275.03 899.00,276.78"
+                            stroke="#C07A35" stroke-width="2.7" fill="none" stroke-linejoin="round"
+                            stroke-linecap="round" />
+                        <circle cx="61.00" cy="18.00" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                        <circle cx="61.00" cy="292.00" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                        <circle cx="130.83" cy="252.86" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                        <circle cx="200.67" cy="264.60" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                        <circle cx="549.83" cy="275.03" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="276.78" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                        <polyline
+                            points="61.00,18.00 410.17,18.00 829.17,60.15 899.00,57.14 899.00,118.95 899.00,276.78"
+                            stroke="#20394A" stroke-width="4" stroke-dasharray="10 5" fill="none"
+                            stroke-linejoin="round" stroke-linecap="round" />
+                        <circle cx="61.00" cy="18.00" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="410.17" cy="18.00" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="829.17" cy="60.15" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="57.14" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="118.95" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="276.78" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                    </svg>
+                    <div class="chart-legend"><span class="legend-entry"><i style="background:#16816B"></i><b>GFD</b>
+                            <span>AUC 0.906351</span></span><span class="legend-entry"><i
+                                style="background:#C07A35"></i><b>SA</b> <span>AUC 0.074290</span></span><span
+                            class="legend-entry"><i style="background:#20394A"></i><b>Majority vote</b> <span>AUC
+                                0.949176</span></span></div>
+                    <figcaption>SA obtains 0.074290, close to the class prevalence of 0.055556. Voting reaches 0.949176
+                        and exceeds GFD (0.906351) for this class.</figcaption>
+                </figure>
+                <figure class="figure">
+                    <div class="figure-title">Figure 3 — Class 15 — the limitations of a strong macro-average</div>
+                    <div class="figure-sub">LOO · 216 queries · 12 neighbours · Euclidean (L2) · one-versus-rest</div>
+                    <svg class="chart-svg" viewBox="0 0 932 352" role="img"
+                        aria-label="Observed precision–recall curves for class 15">
+                        <rect width="932" height="352" fill="#fff" />
+                        <line x1="61.00" y1="18" x2="61.00" y2="292" stroke="#e4ebee" />
+                        <line x1="61" y1="292.00" x2="899" y2="292.00" stroke="#e4ebee" /><text x="61.00" y="314"
+                            text-anchor="middle" fill="#607281" font-size="13">0.0</text><text x="50" y="296.00"
+                            text-anchor="end" fill="#607281" font-size="13">0.0</text>
+                        <line x1="228.60" y1="18" x2="228.60" y2="292" stroke="#e4ebee" />
+                        <line x1="61" y1="237.20" x2="899" y2="237.20" stroke="#e4ebee" /><text x="228.60" y="314"
+                            text-anchor="middle" fill="#607281" font-size="13">0.2</text><text x="50" y="241.20"
+                            text-anchor="end" fill="#607281" font-size="13">0.2</text>
+                        <line x1="396.20" y1="18" x2="396.20" y2="292" stroke="#e4ebee" />
+                        <line x1="61" y1="182.40" x2="899" y2="182.40" stroke="#e4ebee" /><text x="396.20" y="314"
+                            text-anchor="middle" fill="#607281" font-size="13">0.4</text><text x="50" y="186.40"
+                            text-anchor="end" fill="#607281" font-size="13">0.4</text>
+                        <line x1="563.80" y1="18" x2="563.80" y2="292" stroke="#e4ebee" />
+                        <line x1="61" y1="127.60" x2="899" y2="127.60" stroke="#e4ebee" /><text x="563.80" y="314"
+                            text-anchor="middle" fill="#607281" font-size="13">0.6</text><text x="50" y="131.60"
+                            text-anchor="end" fill="#607281" font-size="13">0.6</text>
+                        <line x1="731.40" y1="18" x2="731.40" y2="292" stroke="#e4ebee" />
+                        <line x1="61" y1="72.80" x2="899" y2="72.80" stroke="#e4ebee" /><text x="731.40" y="314"
+                            text-anchor="middle" fill="#607281" font-size="13">0.8</text><text x="50" y="76.80"
+                            text-anchor="end" fill="#607281" font-size="13">0.8</text>
+                        <line x1="899.00" y1="18" x2="899.00" y2="292" stroke="#e4ebee" />
+                        <line x1="61" y1="18.00" x2="899" y2="18.00" stroke="#e4ebee" /><text x="899.00" y="314"
+                            text-anchor="middle" fill="#607281" font-size="13">1.0</text><text x="50" y="22.00"
+                            text-anchor="end" fill="#607281" font-size="13">1.0</text>
+                        <path d="M61,18V292H899" fill="none" stroke="#8fa2ac" stroke-width="1.2" /><text x="480.0"
+                            y="345" text-anchor="middle" fill="#334b5c" font-size="15"
+                            font-weight="600">Recall</text><text x="19" y="155.0" transform="rotate(-90 19 155.0)"
+                            text-anchor="middle" fill="#334b5c" font-size="15" font-weight="600">Precision</text>
+                        <polyline
+                            points="61.00,18.00 61.00,292.00 899.00,72.80 899.00,98.59 899.00,109.33 899.00,118.95 899.00,127.60 899.00,155.00 899.00,165.54 899.00,178.62 899.00,185.94 899.00,276.78"
+                            stroke="#7865B0" stroke-width="2.7" fill="none" stroke-linejoin="round"
+                            stroke-linecap="round" />
+                        <circle cx="61.00" cy="18.00" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                        <circle cx="61.00" cy="292.00" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="72.80" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="98.59" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="109.33" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="118.95" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="127.60" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="155.00" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="165.54" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="178.62" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="185.94" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="276.78" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                        <polyline
+                            points="61.00,18.00 270.50,18.00 619.67,18.00 759.33,18.00 899.00,18.00 899.00,86.50 899.00,98.59 899.00,109.33 899.00,160.48 899.00,174.57 899.00,192.36 899.00,276.78"
+                            stroke="#16816B" stroke-width="2.7" fill="none" stroke-linejoin="round"
+                            stroke-linecap="round" />
+                        <circle cx="61.00" cy="18.00" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="270.50" cy="18.00" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="619.67" cy="18.00" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="759.33" cy="18.00" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="18.00" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="86.50" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="98.59" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="109.33" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="160.48" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="174.57" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="192.36" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="276.78" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                        <polyline
+                            points="61.00,18.00 130.83,18.00 829.17,40.83 899.00,39.08 899.00,98.59 899.00,185.94 899.00,276.78"
+                            stroke="#20394A" stroke-width="4" stroke-dasharray="10 5" fill="none"
+                            stroke-linejoin="round" stroke-linecap="round" />
+                        <circle cx="61.00" cy="18.00" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="130.83" cy="18.00" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="829.17" cy="40.83" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="39.08" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="98.59" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="185.94" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                        <circle cx="899.00" cy="276.78" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                    </svg>
+                    <div class="chart-legend"><span class="legend-entry"><i
+                                style="background:#7865B0"></i><b>Zernike7</b> <span>AUC 0.400000</span></span><span
+                            class="legend-entry"><i style="background:#16816B"></i><b>GFD</b> <span>AUC
+                                1.000000</span></span><span class="legend-entry"><i
+                                style="background:#20394A"></i><b>Majority vote</b> <span>AUC 0.958600</span></span>
+                    </div>
+                    <figcaption>Zernike7 falls to 0.400000 despite a high overall mean; GFD reaches 1.000000 and voting
+                        reaches 0.958600. A macro score must be complemented by class-specific inspection.</figcaption>
+                </figure>
+            </section>
+            <section id="all-curves" class="interactive-section">
+                <h2>4. Explore all 18 classes</h2>
+                <p>Select any class C1–C18 and show or hide any of the six approaches. All curve points are embedded in
+                    this HTML, so the selector works offline without reading an external CSV file.</p>
+                <div class="controls"><strong>Choose class</strong>
+                    <div id="class-buttons" class="class-buttons"></div>
+                    <div class="methods" id="method-controls"></div>
+                </div>
+                <figure class="figure" style="margin-top:13px">
+                    <div class="figure-title" id="interactive-heading">Class 1 — all methods</div>
+                    <div class="figure-sub">Observed points in decreasing score-threshold order · 12 positives / 204
+                        negatives</div>
+                    <div class="plot-placeholder" id="interactive-plot"><svg class="chart-svg" viewBox="0 0 932 352"
+                            role="img" aria-label="Observed precision–recall curves for class 1">
+                            <rect width="932" height="352" fill="#fff" />
+                            <line x1="61.00" y1="18" x2="61.00" y2="292" stroke="#e4ebee" />
+                            <line x1="61" y1="292.00" x2="899" y2="292.00" stroke="#e4ebee" /><text x="61.00" y="314"
+                                text-anchor="middle" fill="#607281" font-size="13">0.0</text><text x="50" y="296.00"
+                                text-anchor="end" fill="#607281" font-size="13">0.0</text>
+                            <line x1="228.60" y1="18" x2="228.60" y2="292" stroke="#e4ebee" />
+                            <line x1="61" y1="237.20" x2="899" y2="237.20" stroke="#e4ebee" /><text x="228.60" y="314"
+                                text-anchor="middle" fill="#607281" font-size="13">0.2</text><text x="50" y="241.20"
+                                text-anchor="end" fill="#607281" font-size="13">0.2</text>
+                            <line x1="396.20" y1="18" x2="396.20" y2="292" stroke="#e4ebee" />
+                            <line x1="61" y1="182.40" x2="899" y2="182.40" stroke="#e4ebee" /><text x="396.20" y="314"
+                                text-anchor="middle" fill="#607281" font-size="13">0.4</text><text x="50" y="186.40"
+                                text-anchor="end" fill="#607281" font-size="13">0.4</text>
+                            <line x1="563.80" y1="18" x2="563.80" y2="292" stroke="#e4ebee" />
+                            <line x1="61" y1="127.60" x2="899" y2="127.60" stroke="#e4ebee" /><text x="563.80" y="314"
+                                text-anchor="middle" fill="#607281" font-size="13">0.6</text><text x="50" y="131.60"
+                                text-anchor="end" fill="#607281" font-size="13">0.6</text>
+                            <line x1="731.40" y1="18" x2="731.40" y2="292" stroke="#e4ebee" />
+                            <line x1="61" y1="72.80" x2="899" y2="72.80" stroke="#e4ebee" /><text x="731.40" y="314"
+                                text-anchor="middle" fill="#607281" font-size="13">0.8</text><text x="50" y="76.80"
+                                text-anchor="end" fill="#607281" font-size="13">0.8</text>
+                            <line x1="899.00" y1="18" x2="899.00" y2="292" stroke="#e4ebee" />
+                            <line x1="61" y1="18.00" x2="899" y2="18.00" stroke="#e4ebee" /><text x="899.00" y="314"
+                                text-anchor="middle" fill="#607281" font-size="13">1.0</text><text x="50" y="22.00"
+                                text-anchor="end" fill="#607281" font-size="13">1.0</text>
+                            <path d="M61,18V292H899" fill="none" stroke="#8fa2ac" stroke-width="1.2" /><text x="480.0"
+                                y="345" text-anchor="middle" fill="#334b5c" font-size="15"
+                                font-weight="600">Recall</text><text x="19" y="155.0" transform="rotate(-90 19 155.0)"
+                                text-anchor="middle" fill="#334b5c" font-size="15" font-weight="600">Precision</text>
+                            <polyline
+                                points="61.00,18.00 130.83,18.00 200.67,18.00 480.00,18.00 549.83,18.00 689.50,18.00 759.33,42.91 829.17,40.83 829.17,60.15 899.00,200.67 899.00,276.78"
+                                stroke="#22669A" stroke-width="2.7" fill="none" stroke-linejoin="round"
+                                stroke-linecap="round" />
+                            <circle cx="61.00" cy="18.00" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                            <circle cx="130.83" cy="18.00" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                            <circle cx="200.67" cy="18.00" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                            <circle cx="480.00" cy="18.00" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                            <circle cx="549.83" cy="18.00" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                            <circle cx="689.50" cy="18.00" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                            <circle cx="759.33" cy="42.91" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                            <circle cx="829.17" cy="40.83" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                            <circle cx="829.17" cy="60.15" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                            <circle cx="899.00" cy="200.67" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                            <circle cx="899.00" cy="276.78" r="2.5" fill="#22669A" stroke="#fff" stroke-width=".6" />
+                            <polyline
+                                points="61.00,18.00 130.83,18.00 410.17,18.00 480.00,18.00 619.67,18.00 759.33,42.91 829.17,76.71 829.17,160.96 899.00,207.69 899.00,276.78"
+                                stroke="#16816B" stroke-width="2.7" fill="none" stroke-linejoin="round"
+                                stroke-linecap="round" />
+                            <circle cx="61.00" cy="18.00" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                            <circle cx="130.83" cy="18.00" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                            <circle cx="410.17" cy="18.00" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                            <circle cx="480.00" cy="18.00" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                            <circle cx="619.67" cy="18.00" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                            <circle cx="759.33" cy="42.91" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                            <circle cx="829.17" cy="76.71" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                            <circle cx="829.17" cy="160.96" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                            <circle cx="899.00" cy="207.69" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                            <circle cx="899.00" cy="276.78" r="2.5" fill="#16816B" stroke="#fff" stroke-width=".6" />
+                            <polyline
+                                points="61.00,18.00 130.83,155.00 340.33,207.69 549.83,215.28 829.17,237.20 899.00,276.78"
+                                stroke="#C07A35" stroke-width="2.7" fill="none" stroke-linejoin="round"
+                                stroke-linecap="round" />
+                            <circle cx="61.00" cy="18.00" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                            <circle cx="130.83" cy="155.00" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                            <circle cx="340.33" cy="207.69" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                            <circle cx="549.83" cy="215.28" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                            <circle cx="829.17" cy="237.20" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                            <circle cx="899.00" cy="276.78" r="2.5" fill="#C07A35" stroke="#fff" stroke-width=".6" />
+                            <polyline
+                                points="61.00,18.00 270.50,86.50 410.17,63.67 549.83,52.25 689.50,67.82 759.33,81.23 829.17,124.56 899.00,174.57 899.00,220.52 899.00,276.78"
+                                stroke="#B75565" stroke-width="2.7" fill="none" stroke-linejoin="round"
+                                stroke-linecap="round" />
+                            <circle cx="61.00" cy="18.00" r="2.5" fill="#B75565" stroke="#fff" stroke-width=".6" />
+                            <circle cx="270.50" cy="86.50" r="2.5" fill="#B75565" stroke="#fff" stroke-width=".6" />
+                            <circle cx="410.17" cy="63.67" r="2.5" fill="#B75565" stroke="#fff" stroke-width=".6" />
+                            <circle cx="549.83" cy="52.25" r="2.5" fill="#B75565" stroke="#fff" stroke-width=".6" />
+                            <circle cx="689.50" cy="67.82" r="2.5" fill="#B75565" stroke="#fff" stroke-width=".6" />
+                            <circle cx="759.33" cy="81.23" r="2.5" fill="#B75565" stroke="#fff" stroke-width=".6" />
+                            <circle cx="829.17" cy="124.56" r="2.5" fill="#B75565" stroke="#fff" stroke-width=".6" />
+                            <circle cx="899.00" cy="174.57" r="2.5" fill="#B75565" stroke="#fff" stroke-width=".6" />
+                            <circle cx="899.00" cy="220.52" r="2.5" fill="#B75565" stroke="#fff" stroke-width=".6" />
+                            <circle cx="899.00" cy="276.78" r="2.5" fill="#B75565" stroke="#fff" stroke-width=".6" />
+                            <polyline
+                                points="61.00,18.00 200.67,18.00 340.33,18.00 480.00,18.00 619.67,18.00 759.33,18.00 829.17,18.00 899.00,72.80 899.00,200.67 899.00,276.78"
+                                stroke="#7865B0" stroke-width="2.7" fill="none" stroke-linejoin="round"
+                                stroke-linecap="round" />
+                            <circle cx="61.00" cy="18.00" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                            <circle cx="200.67" cy="18.00" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                            <circle cx="340.33" cy="18.00" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                            <circle cx="480.00" cy="18.00" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                            <circle cx="619.67" cy="18.00" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                            <circle cx="759.33" cy="18.00" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                            <circle cx="829.17" cy="18.00" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                            <circle cx="899.00" cy="72.80" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                            <circle cx="899.00" cy="200.67" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                            <circle cx="899.00" cy="276.78" r="2.5" fill="#7865B0" stroke="#fff" stroke-width=".6" />
+                            <polyline
+                                points="61.00,18.00 200.67,18.00 619.67,18.00 689.50,18.00 759.33,18.00 829.17,76.71 899.00,276.78"
+                                stroke="#20394A" stroke-width="4" stroke-dasharray="10 5" fill="none"
+                                stroke-linejoin="round" stroke-linecap="round" />
+                            <circle cx="61.00" cy="18.00" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                            <circle cx="200.67" cy="18.00" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                            <circle cx="619.67" cy="18.00" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                            <circle cx="689.50" cy="18.00" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                            <circle cx="759.33" cy="18.00" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                            <circle cx="829.17" cy="76.71" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                            <circle cx="899.00" cy="276.78" r="2.5" fill="#20394A" stroke="#fff" stroke-width=".6" />
+                        </svg></div>
+                    <div id="interactive-legend" class="chart-legend"></div>
+                    <figcaption>Interpretation: stronger curves tend to remain near the upper edge as recall increases.
+                        Read the AUC next to each enabled approach; a crossing between curves means that one method is
+                        not necessarily better at every recall value.</figcaption>
+                </figure>
+            </section>
+            <section id="results">
+                <h2>5. Complete numerical results — 18 classes</h2>
+                <p>The table preserves the <strong>108 class-specific AUC values</strong> from the uploaded run, plus
+                    the equally weighted macro-average for each approach. Cells marked in green have the highest AUC for
+                    that class (ties included). Low values below 0.2 are shown in orange-red.</p>
+                <div class="gridtable">
+                    <table aria-label="PR-AUC results for all 18 classes">
+                        <thead>
+                            <tr>
+                                <th scope="col">Class</th>
+                                <th scope="col">ART</th>
+                                <th scope="col">GFD</th>
+                                <th scope="col">SA</th>
+                                <th scope="col">Yang</th>
+                                <th scope="col">Zernike7</th>
+                                <th scope="col">Majority vote</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">C1</th>
+                                <td class="number">0.954764</td>
+                                <td class="number">0.929123</td>
+                                <td class="number mediocre">0.327571</td>
+                                <td class="number">0.801131</td>
+                                <td class="number best">0.991667</td>
+                                <td class="number">0.942791</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">C2</th>
+                                <td class="number best">1.000000</td>
+                                <td class="number best">1.000000</td>
+                                <td class="number">0.856812</td>
+                                <td class="number">0.832955</td>
+                                <td class="number best">1.000000</td>
+                                <td class="number best">1.000000</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">C3</th>
+                                <td class="number best">1.000000</td>
+                                <td class="number best">1.000000</td>
+                                <td class="number mediocre">0.213787</td>
+                                <td class="number">0.565869</td>
+                                <td class="number">0.996795</td>
+                                <td class="number">0.976600</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">C4</th>
+                                <td class="number">0.873601</td>
+                                <td class="number">0.931299</td>
+                                <td class="number mediocre">0.263482</td>
+                                <td class="number mediocre">0.384720</td>
+                                <td class="number">0.893084</td>
+                                <td class="number best">0.964782</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">C5</th>
+                                <td class="number">0.961538</td>
+                                <td class="number best">1.000000</td>
+                                <td class="number mediocre">0.442348</td>
+                                <td class="number">0.936511</td>
+                                <td class="number best">1.000000</td>
+                                <td class="number">0.996795</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">C6</th>
+                                <td class="number best">1.000000</td>
+                                <td class="number best">1.000000</td>
+                                <td class="number">0.959416</td>
+                                <td class="number">0.996795</td>
+                                <td class="number best">1.000000</td>
+                                <td class="number best">1.000000</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">C7</th>
+                                <td class="number">0.613209</td>
+                                <td class="number best">1.000000</td>
+                                <td class="number mediocre">0.308658</td>
+                                <td class="number mediocre">0.434420</td>
+                                <td class="number best">1.000000</td>
+                                <td class="number">0.948718</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">C8</th>
+                                <td class="number">0.605622</td>
+                                <td class="number">0.875558</td>
+                                <td class="number mediocre">0.342792</td>
+                                <td class="number">0.719839</td>
+                                <td class="number">0.881682</td>
+                                <td class="number best">0.892647</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">C9</th>
+                                <td class="number best">1.000000</td>
+                                <td class="number best">1.000000</td>
+                                <td class="number mediocre">0.458791</td>
+                                <td class="number mediocre">0.348078</td>
+                                <td class="number best">1.000000</td>
+                                <td class="number best">1.000000</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">C10</th>
+                                <td class="number">0.530647</td>
+                                <td class="number best">0.936610</td>
+                                <td class="number">0.598701</td>
+                                <td class="number">0.515833</td>
+                                <td class="number">0.722846</td>
+                                <td class="number">0.920897</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">C11</th>
+                                <td class="number best">1.000000</td>
+                                <td class="number best">1.000000</td>
+                                <td class="number mediocre">0.496795</td>
+                                <td class="number best">1.000000</td>
+                                <td class="number best">1.000000</td>
+                                <td class="number best">1.000000</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">C12</th>
+                                <td class="number best">1.000000</td>
+                                <td class="number best">1.000000</td>
+                                <td class="number mediocre">0.485822</td>
+                                <td class="number">0.902031</td>
+                                <td class="number best">1.000000</td>
+                                <td class="number best">1.000000</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">C13</th>
+                                <td class="number mediocre">0.384575</td>
+                                <td class="number">0.974359</td>
+                                <td class="number weak">0.127630</td>
+                                <td class="number">0.688881</td>
+                                <td class="number best">0.983974</td>
+                                <td class="number">0.831229</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">C14</th>
+                                <td class="number">0.986014</td>
+                                <td class="number">0.970911</td>
+                                <td class="number mediocre">0.366985</td>
+                                <td class="number">0.868614</td>
+                                <td class="number">0.920082</td>
+                                <td class="number best">0.987103</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">C15</th>
+                                <td class="number best">1.000000</td>
+                                <td class="number best">1.000000</td>
+                                <td class="number">0.544347</td>
+                                <td class="number mediocre">0.342945</td>
+                                <td class="number mediocre">0.400000</td>
+                                <td class="number">0.958600</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">C16</th>
+                                <td class="number">0.630539</td>
+                                <td class="number best">0.984273</td>
+                                <td class="number">0.802658</td>
+                                <td class="number">0.662422</td>
+                                <td class="number">0.848709</td>
+                                <td class="number">0.919678</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">C17</th>
+                                <td class="number">0.954487</td>
+                                <td class="number best">1.000000</td>
+                                <td class="number">0.660750</td>
+                                <td class="number">0.765400</td>
+                                <td class="number">0.964103</td>
+                                <td class="number">0.977705</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">C18</th>
+                                <td class="number">0.841575</td>
+                                <td class="number">0.906351</td>
+                                <td class="number weak">0.074290</td>
+                                <td class="number">0.620766</td>
+                                <td class="number">0.947421</td>
+                                <td class="number best">0.949176</td>
+                            </tr>
+                            <tr class="macro-row">
+                                <th scope="row">Macro</th>
+                                <td class="number">0.852032</td>
+                                <td class="number">0.972694</td>
+                                <td class="number">0.462869</td>
+                                <td class="number">0.688178</td>
+                                <td class="number">0.919465</td>
+                                <td class="number">0.959262</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-caption">C1–C18: one-vs-rest PR-AUC. Macro: mean of the 18 class AUC values; do not
+                    average the repeated per-threshold <code>auc</code> entries in the CSV, as curves contain different
+                    numbers of rows.</div>
+                <div class="barbox">
+                    <h3 style="margin-top:0">Macro PR-AUC by method</h3>
+                    <div class="subhead">Higher values indicate better overall ranking of positives relative to
+                        negatives for the tested scores.</div>
+                    <div class="bar-row"><span class="bar-label"><i style="background:#16816B"></i>GFD</span>
+                        <div class="track">
+                            <div class="fill" style="width:97.26935%;background:#16816B"></div>
+                        </div><strong>0.972694</strong>
+                    </div>
+                    <div class="bar-row"><span class="bar-label"><i style="background:#20394A"></i>Majority vote</span>
+                        <div class="track">
+                            <div class="fill" style="width:95.92623%;background:#20394A"></div>
+                        </div><strong>0.959262</strong>
+                    </div>
+                    <div class="bar-row"><span class="bar-label"><i style="background:#7865B0"></i>Zernike7</span>
+                        <div class="track">
+                            <div class="fill" style="width:91.94646%;background:#7865B0"></div>
+                        </div><strong>0.919465</strong>
+                    </div>
+                    <div class="bar-row"><span class="bar-label"><i style="background:#22669A"></i>ART</span>
+                        <div class="track">
+                            <div class="fill" style="width:85.20318%;background:#22669A"></div>
+                        </div><strong>0.852032</strong>
+                    </div>
+                    <div class="bar-row"><span class="bar-label"><i style="background:#B75565"></i>Yang</span>
+                        <div class="track">
+                            <div class="fill" style="width:68.81784%;background:#B75565"></div>
+                        </div><strong>0.688178</strong>
+                    </div>
+                    <div class="bar-row"><span class="bar-label"><i style="background:#C07A35"></i>SA</span>
+                        <div class="track">
+                            <div class="fill" style="width:46.28686%;background:#C07A35"></div>
+                        </div><strong>0.462869</strong>
+                    </div>
+                </div>
+                <p><strong>Ranking:</strong> GFD (0.972694) &gt; Majority vote (0.959262) &gt; Zernike7 (0.919465) &gt;
+                    ART (0.852032) &gt; Yang (0.688178) &gt; SA (0.462869).</p>
+            </section>
+            <section id="manual">
+                <h2>6. Independent AUC verification — Class 18, majority vote</h2>
+                <p>This example uses the exact Class 18 voting points from the uploaded CSV. There are 12 positives and
+                    204 negatives. The number selected at each threshold is TP / precision, and recall is TP / 12.</p>
+                <div class="gridtable slim">
+                    <table aria-label="Voting class 18 AUC calculation">
+                        <thead>
+                            <tr>
+                                <th>Threshold</th>
+                                <th>TP</th>
+                                <th>Selected</th>
+                                <th>Recall</th>
+                                <th>Precision</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Start</td>
+                                <td class="number">0</td>
+                                <td class="number">0</td>
+                                <td class="number">0.000000</td>
+                                <td class="number">1.000000</td>
+                            </tr>
+                            <tr>
+                                <td>0.8</td>
+                                <td class="number">5</td>
+                                <td class="number">5</td>
+                                <td class="number">0.416667</td>
+                                <td class="number">1.000000</td>
+                            </tr>
+                            <tr>
+                                <td>0.6</td>
+                                <td class="number">11</td>
+                                <td class="number">13</td>
+                                <td class="number">0.916667</td>
+                                <td class="number">0.846154</td>
+                            </tr>
+                            <tr>
+                                <td>0.4</td>
+                                <td class="number">12</td>
+                                <td class="number">14</td>
+                                <td class="number">1.000000</td>
+                                <td class="number">0.857143</td>
+                            </tr>
+                            <tr>
+                                <td>0.2</td>
+                                <td class="number">12</td>
+                                <td class="number">19</td>
+                                <td class="number">1.000000</td>
+                                <td class="number">0.631579</td>
+                            </tr>
+                            <tr>
+                                <td>0.0</td>
+                                <td class="number">12</td>
+                                <td class="number">216</td>
+                                <td class="number">1.000000</td>
+                                <td class="number">0.055556</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>At threshold 0.8, five positive images are selected with no false positives: precision 5/5 = 1,
+                    recall 5/12. At 0.6, eleven positives are selected among thirteen images: precision 11/13 and recall
+                    11/12. At 0.4, all twelve positives are among fourteen selected images, giving precision 12/14 and
+                    recall 1.</p>
+                <div class="formula"><span class="eq">AUC = (5/12) × (1 + 1)/2 + (6/12) × (1 + 11/13)/2</span><span
+                        class="eq">+ (1/12) × (11/13 + 12/14)/2</span><span class="eq"><strong>= 691/728 ≈
+                            0.949176</strong></span></div>
+                <p>Subsequent thresholds 0.2 and 0 add more false positives while recall remains 1; these vertical
+                    changes contribute no additional area. The computed value exactly matches the precision–recall CSV
+                    and the terminal output at the precision shown.</p>
+            </section>
+            <section id="discussion">
+                <h2>7. Interpretation of the experiment</h2>
+                <div class="findings">
+                    <div class="finding">
+                        <h3>GFD is strongest overall</h3>
+                        <p>GFD achieves macro PR-AUC <strong>0.972694</strong>, with perfect AUC on 10 of the 18
+                            classes. It never drops below 0.875558 (Class 8), indicating consistently high
+                            positive/negative ranking performance under these parameters.</p>
+                    </div>
+                    <div class="finding">
+                        <h3>Voting is a strong but not universal improvement</h3>
+                        <p>Majority voting ranks second, with macro PR-AUC <strong>0.959262</strong>. Relative to GFD,
+                            voting is better on five classes, tied on five, and worse on eight. Its largest deficit is
+                            on Class 13 (0.831229 versus 0.974359), despite improving upon GFD on Class 18.</p>
+                    </div>
+                    <div class="finding">
+                        <h3>SA is the weakest descriptor</h3>
+                        <p>SA obtains macro PR-AUC <strong>0.462869</strong>. Class 18 reaches only
+                            <strong>0.074290</strong> and Class 13 only 0.127630, although Class 6 reaches 0.959416.
+                            Thus, the weakness is strongly class-dependent.</p>
+                    </div>
+                    <div class="finding">
+                        <h3>Macro scores hide local failures</h3>
+                        <p>Zernike7 is third overall (0.919465), yet drops to <strong>0.400000 on Class 15</strong>,
+                            where GFD reaches 1.000000. Yang (0.688178) also has difficult classes, notably C15
+                            (0.342945), C9 (0.348078), and C4 (0.384720).</p>
+                    </div>
+                </div>
+                <h3>What can—and cannot—be concluded</h3>
+                <p>These results assess the <em>quality of class-score ranking</em>, not a single classifier's
+                    recognition rate at one operating threshold. A high PR-AUC means the class's positives generally
+                    receive stronger scores than negatives across the tested thresholds. In contrast, the global
+                    recognition rate evaluates one final predicted label per query. Neither metric should be substituted
+                    for the other.</p>
+                <div class="aside warn"><strong>Important limitations.</strong> All 216 observations belong to one
+                    dataset; LOO repeats highly overlapping reference sets. Macro PR-AUC is descriptive, not a
+                    generalization guarantee or statistical significance test. Curves are discrete and may have tied
+                    score groups, especially voting (scores in fifths). The comparison uses one distance (L2) and one
+                    neighbour count (12), and does not establish those as optimal. The data do not identify which
+                    specific images were corrected by voting: this would require sample-level predictions.</div>
+            </section>
+            <section id="conclusion">
+                <h2>8. Complete answer to the professor's question</h2>
+                <div class="answer">
+                    <h3>Section 3.c — Precision–Recall curves (and AUC), K = 12</h3>
+                    <p>We evaluated the five k-NN classifiers based on ART, GFD, SA, Yang and Zernike7, plus the
+                        majority-vote combination of their predictions, on <strong>all 18 classes of SharvitB2 (216
+                            images)</strong>. The test protocol was leave-one-out: each image was scored using its
+                        twelve nearest neighbours among the remaining 215 images, with Euclidean distance (L2). For each
+                        class, we treated its 12 images as positives and all 204 other images as negatives, producing 18
+                        one-vs-rest precision–recall curves for each method (108 curves in total).</p>
+                    <p>For a single descriptor, a class's score is the fraction of its labels among the twelve
+                        neighbours. For voting, it is the fraction of the five descriptors whose k-NN decision supports
+                        that class. We varied the threshold, computed precision and recall at each level, and calculated
+                        PR-AUC using trapezoidal integration. We then averaged the 18 class AUC values to obtain each
+                        method's macro PR-AUC.</p>
+                    <p><strong>GFD provides the highest overall result (0.972694)</strong>, followed by <strong>majority
+                            voting (0.959262)</strong>, Zernike7 (0.919465), ART (0.852032), Yang (0.688178), and SA
+                        (0.462869). Voting improves markedly over weaker descriptors but does not surpass GFD's
+                        macro-AUC. The per-class curves expose important weaknesses that would be hidden by a single
+                        average: for example, SA has PR-AUC 0.074290 on Class 18, while Zernike7 has 0.400000 on Class
+                        15 despite its good macro score.</p>
+                    <p>We conclude that <strong>GFD offers the most reliable overall class-score discrimination among
+                            the tested approaches</strong>, while voting offers a strong combined solution with
+                        different class-specific strengths. These findings apply to the 18-class dataset with the
+                        specified LOO protocol, distance and neighbour count; further testing would be required to
+                        assess performance on independent data.</p>
+                </div>
+            </section>
+            
+        </div>
+        <footer><span>SharvitB2 · Pattern Recognition · Section 3.c</span><span>18-class corrected edition ·
+                English</span></footer>
+    </article>
+    <script>
+        const curves = { "k-NN ART|1": { "auc": 0.954763986014, "points": [[0.0, 1.0], [0.083333333333, 1.0], [0.166666666667, 1.0], [0.5, 1.0], [0.583333333333, 1.0], [0.75, 1.0], [0.833333333333, 0.909090909091], [0.916666666667, 0.916666666667], [0.916666666667, 0.846153846154], [1.0, 0.333333333333], [1.0, 0.055555555556]] }, "k-NN ART|2": { "auc": 1.0, "points": [[0.0, 1.0], [1.0, 1.0], [1.0, 0.055555555556]] }, "k-NN ART|3": { "auc": 1.0, "points": [[0.0, 1.0], [0.25, 1.0], [0.75, 1.0], [0.833333333333, 1.0], [0.916666666667, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.5], [1.0, 0.055555555556]] }, "k-NN ART|4": { "auc": 0.873601260835, "points": [[0.0, 1.0], [0.333333333333, 1.0], [0.5, 1.0], [0.583333333333, 1.0], [0.666666666667, 0.888888888889], [0.666666666667, 0.8], [0.833333333333, 0.666666666667], [0.916666666667, 0.611111111111], [1.0, 0.255319148936], [1.0, 0.055555555556]] }, "k-NN ART|5": { "auc": 0.961538461538, "points": [[0.0, 1.0], [1.0, 0.923076923077], [1.0, 0.857142857143], [1.0, 0.75], [1.0, 0.666666666667], [1.0, 0.571428571429], [1.0, 0.444444444444], [1.0, 0.375], [1.0, 0.315789473684], [1.0, 0.055555555556]] }, "k-NN ART|6": { "auc": 1.0, "points": [[0.0, 1.0], [1.0, 1.0], [1.0, 0.6], [1.0, 0.055555555556]] }, "k-NN ART|7": { "auc": 0.613209196058, "points": [[0.0, 1.0], [0.0, 0.0], [0.5, 0.857142857143], [0.833333333333, 0.909090909091], [0.833333333333, 0.833333333333], [0.916666666667, 0.785714285714], [0.916666666667, 0.733333333333], [0.916666666667, 0.611111111111], [1.0, 0.279069767442], [1.0, 0.055555555556]] }, "k-NN ART|8": { "auc": 0.605621577644, "points": [[0.0, 1.0], [0.333333333333, 0.8], [0.583333333333, 0.538461538462], [0.583333333333, 0.411764705882], [0.833333333333, 0.3125], [1.0, 0.260869565217], [1.0, 0.22641509434], [1.0, 0.055555555556]] }, "k-NN ART|9": { "auc": 1.0, "points": [[0.0, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.857142857143], [1.0, 0.8], [1.0, 0.75], [1.0, 0.666666666667], [1.0, 0.631578947368], [1.0, 0.055555555556]] }, "k-NN ART|10": { "auc": 0.530647083395, "points": [[0.0, 1.0], [0.166666666667, 0.666666666667], [0.333333333333, 0.4], [0.416666666667, 0.416666666667], [0.75, 0.529411764706], [0.833333333333, 0.555555555556], [0.916666666667, 0.578947368421], [0.916666666667, 0.392857142857], [1.0, 0.055555555556]] }, "k-NN ART|11": { "auc": 1.0, "points": [[0.0, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.857142857143], [1.0, 0.055555555556]] }, "k-NN ART|12": { "auc": 1.0, "points": [[0.0, 1.0], [0.416666666667, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.055555555556]] }, "k-NN ART|13": { "auc": 0.384574915825, "points": [[0.0, 1.0], [0.0, 0.0], [0.083333333333, 0.166666666667], [0.166666666667, 0.25], [0.833333333333, 0.555555555556], [1.0, 0.545454545455], [1.0, 0.48], [1.0, 0.413793103448], [1.0, 0.363636363636], [1.0, 0.055555555556]] }, "k-NN ART|14": { "auc": 0.986013986014, "points": [[0.0, 1.0], [0.583333333333, 1.0], [0.833333333333, 1.0], [0.833333333333, 0.909090909091], [1.0, 0.923076923077], [1.0, 0.857142857143], [1.0, 0.8], [1.0, 0.75], [1.0, 0.666666666667], [1.0, 0.413793103448], [1.0, 0.055555555556]] }, "k-NN ART|15": { "auc": 1.0, "points": [[0.0, 1.0], [0.333333333333, 1.0], [0.75, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.666666666667], [1.0, 0.631578947368], [1.0, 0.571428571429], [1.0, 0.545454545455], [1.0, 0.055555555556]] }, "k-NN ART|16": { "auc": 0.630539395245, "points": [[0.0, 1.0], [0.333333333333, 0.5], [0.666666666667, 0.615384615385], [0.75, 0.642857142857], [0.916666666667, 0.647058823529], [0.916666666667, 0.611111111111], [0.916666666667, 0.578947368421], [0.916666666667, 0.458333333333], [1.0, 0.375], [1.0, 0.307692307692], [1.0, 0.055555555556]] }, "k-NN ART|17": { "auc": 0.954487179487, "points": [[0.0, 1.0], [0.083333333333, 1.0], [0.333333333333, 1.0], [0.583333333333, 1.0], [0.75, 1.0], [0.833333333333, 0.769230769231], [1.0, 0.8], [1.0, 0.705882352941], [1.0, 0.631578947368], [1.0, 0.571428571429], [1.0, 0.055555555556]] }, "k-NN ART|18": { "auc": 0.841575064369, "points": [[0.0, 1.0], [0.083333333333, 1.0], [0.25, 0.75], [0.416666666667, 0.833333333333], [0.666666666667, 0.888888888889], [0.75, 0.818181818182], [0.833333333333, 0.833333333333], [0.916666666667, 0.733333333333], [1.0, 0.705882352941], [1.0, 0.307692307692], [1.0, 0.055555555556]] }, "k-NN GFD|1": { "auc": 0.929122507927, "points": [[0.0, 1.0], [0.083333333333, 1.0], [0.416666666667, 1.0], [0.5, 1.0], [0.666666666667, 1.0], [0.833333333333, 0.909090909091], [0.916666666667, 0.785714285714], [0.916666666667, 0.478260869565], [1.0, 0.307692307692], [1.0, 0.055555555556]] }, "k-NN GFD|2": { "auc": 1.0, "points": [[0.0, 1.0], [0.833333333333, 1.0], [0.916666666667, 1.0], [1.0, 1.0], [1.0, 0.8], [1.0, 0.705882352941], [1.0, 0.055555555556]] }, "k-NN GFD|3": { "auc": 1.0, "points": [[0.0, 1.0], [0.25, 1.0], [0.5, 1.0], [0.833333333333, 1.0], [0.916666666667, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.3], [1.0, 0.055555555556]] }, "k-NN GFD|4": { "auc": 0.93129877369, "points": [[0.0, 1.0], [0.25, 1.0], [0.5, 1.0], [0.583333333333, 1.0], [0.75, 1.0], [0.833333333333, 0.769230769231], [1.0, 0.521739130435], [1.0, 0.244897959184], [1.0, 0.055555555556]] }, "k-NN GFD|5": { "auc": 1.0, "points": [[0.0, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.705882352941], [1.0, 0.6], [1.0, 0.363636363636], [1.0, 0.055555555556]] }, "k-NN GFD|6": { "auc": 1.0, "points": [[0.0, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.8], [1.0, 0.055555555556]] }, "k-NN GFD|7": { "auc": 1.0, "points": [[0.0, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.857142857143], [1.0, 0.75], [1.0, 0.631578947368], [1.0, 0.055555555556]] }, "k-NN GFD|8": { "auc": 0.875558278867, "points": [[0.0, 1.0], [0.166666666667, 1.0], [0.666666666667, 0.888888888889], [0.75, 0.75], [0.916666666667, 0.647058823529], [1.0, 0.6], [1.0, 0.521739130435], [1.0, 0.48], [1.0, 0.444444444444], [1.0, 0.333333333333], [1.0, 0.055555555556]] }, "k-NN GFD|9": { "auc": 1.0, "points": [[0.0, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.857142857143], [1.0, 0.8], [1.0, 0.666666666667], [1.0, 0.055555555556]] }, "k-NN GFD|10": { "auc": 0.93660968661, "points": [[0.0, 1.0], [0.083333333333, 1.0], [0.416666666667, 1.0], [0.583333333333, 1.0], [0.75, 1.0], [0.916666666667, 1.0], [0.916666666667, 0.846153846154], [0.916666666667, 0.6875], [0.916666666667, 0.423076923077], [1.0, 0.055555555556]] }, "k-NN GFD|11": { "auc": 1.0, "points": [[0.0, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.857142857143], [1.0, 0.631578947368], [1.0, 0.6], [1.0, 0.055555555556]] }, "k-NN GFD|12": { "auc": 1.0, "points": [[0.0, 1.0], [0.416666666667, 1.0], [0.916666666667, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.8], [1.0, 0.055555555556]] }, "k-NN GFD|13": { "auc": 0.974358974359, "points": [[0.0, 1.0], [0.333333333333, 1.0], [1.0, 0.923076923077], [1.0, 0.571428571429], [1.0, 0.521739130435], [1.0, 0.413793103448], [1.0, 0.324324324324], [1.0, 0.055555555556]] }, "k-NN GFD|14": { "auc": 0.970911033411, "points": [[0.0, 1.0], [0.5, 1.0], [0.833333333333, 0.909090909091], [0.916666666667, 0.916666666667], [1.0, 0.923076923077], [1.0, 0.705882352941], [1.0, 0.545454545455], [1.0, 0.461538461538], [1.0, 0.055555555556]] }, "k-NN GFD|15": { "auc": 1.0, "points": [[0.0, 1.0], [0.25, 1.0], [0.666666666667, 1.0], [0.833333333333, 1.0], [1.0, 1.0], [1.0, 0.75], [1.0, 0.705882352941], [1.0, 0.666666666667], [1.0, 0.48], [1.0, 0.428571428571], [1.0, 0.363636363636], [1.0, 0.055555555556]] }, "k-NN GFD|16": { "auc": 0.984272875817, "points": [[0.0, 1.0], [0.416666666667, 1.0], [0.916666666667, 1.0], [0.916666666667, 0.916666666667], [1.0, 0.705882352941], [1.0, 0.521739130435], [1.0, 0.444444444444], [1.0, 0.055555555556]] }, "k-NN GFD|17": { "auc": 1.0, "points": [[0.0, 1.0], [0.666666666667, 1.0], [0.75, 1.0], [0.833333333333, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.857142857143], [1.0, 0.631578947368], [1.0, 0.545454545455], [1.0, 0.055555555556]] }, "k-NN GFD|18": { "auc": 0.906351287601, "points": [[0.0, 1.0], [0.5, 0.857142857143], [0.75, 0.9], [0.833333333333, 0.909090909091], [0.916666666667, 0.916666666667], [0.916666666667, 0.846153846154], [1.0, 0.857142857143], [1.0, 0.8], [1.0, 0.75], [1.0, 0.352941176471], [1.0, 0.055555555556]] }, "k-NN SA|1": { "auc": 0.327571225071, "points": [[0.0, 1.0], [0.083333333333, 0.5], [0.333333333333, 0.307692307692], [0.583333333333, 0.28], [0.916666666667, 0.2], [1.0, 0.055555555556]] }, "k-NN SA|2": { "auc": 0.856812169312, "points": [[0.0, 1.0], [0.416666666667, 0.833333333333], [0.583333333333, 0.777777777778], [1.0, 0.857142857143], [1.0, 0.8], [1.0, 0.631578947368], [1.0, 0.48], [1.0, 0.413793103448], [1.0, 0.055555555556]] }, "k-NN SA|3": { "auc": 0.213786891713, "points": [[0.0, 1.0], [0.0, 0.0], [0.0, 0.0], [0.5, 0.315789473684], [0.666666666667, 0.32], [0.666666666667, 0.285714285714], [0.75, 0.243243243243], [1.0, 0.235294117647], [1.0, 0.055555555556]] }, "k-NN SA|4": { "auc": 0.26348179052, "points": [[0.0, 1.0], [0.25, 0.375], [0.333333333333, 0.105263157895], [0.833333333333, 0.121951219512], [1.0, 0.055555555556]] }, "k-NN SA|5": { "auc": 0.442348484848, "points": [[0.0, 1.0], [0.0, 0.0], [0.25, 0.6], [0.416666666667, 0.454545454545], [0.916666666667, 0.5], [1.0, 0.48], [1.0, 0.4], [1.0, 0.363636363636], [1.0, 0.279069767442], [1.0, 0.230769230769], [1.0, 0.055555555556]] }, "k-NN SA|6": { "auc": 0.959415584416, "points": [[0.0, 1.0], [0.083333333333, 1.0], [0.75, 1.0], [0.75, 0.818181818182], [1.0, 0.857142857143], [1.0, 0.055555555556]] }, "k-NN SA|7": { "auc": 0.308657594842, "points": [[0.0, 1.0], [0.0, 0.0], [0.083333333333, 0.142857142857], [0.75, 0.473684210526], [0.916666666667, 0.52380952381], [0.916666666667, 0.478260869565], [0.916666666667, 0.44], [0.916666666667, 0.407407407407], [0.916666666667, 0.282051282051], [1.0, 0.055555555556]] }, "k-NN SA|8": { "auc": 0.342792207792, "points": [[0.0, 1.0], [0.0, 0.0], [0.25, 0.6], [0.25, 0.5], [0.416666666667, 0.454545454545], [0.666666666667, 0.444444444444], [0.666666666667, 0.32], [0.833333333333, 0.2], [1.0, 0.190476190476], [1.0, 0.055555555556]] }, "k-NN SA|9": { "auc": 0.458791208791, "points": [[0.0, 1.0], [0.0, 0.0], [0.916666666667, 0.846153846154], [1.0, 0.857142857143], [1.0, 0.666666666667], [1.0, 0.6], [1.0, 0.444444444444], [1.0, 0.387096774194], [1.0, 0.055555555556]] }, "k-NN SA|10": { "auc": 0.598701298701, "points": [[0.0, 1.0], [0.166666666667, 0.666666666667], [0.5, 0.857142857143], [0.5, 0.75], [0.666666666667, 0.727272727273], [0.666666666667, 0.666666666667], [0.666666666667, 0.615384615385], [0.666666666667, 0.571428571429], [0.666666666667, 0.533333333333], [0.75, 0.321428571429], [1.0, 0.055555555556]] }, "k-NN SA|11": { "auc": 0.496794871795, "points": [[0.0, 1.0], [0.0, 0.0], [0.916666666667, 0.916666666667], [1.0, 0.923076923077], [1.0, 0.857142857143], [1.0, 0.8], [1.0, 0.055555555556]] }, "k-NN SA|12": { "auc": 0.485821759259, "points": [[0.0, 1.0], [0.0, 0.0], [0.833333333333, 0.909090909091], [0.916666666667, 0.916666666667], [0.916666666667, 0.6875], [1.0, 0.055555555556]] }, "k-NN SA|13": { "auc": 0.127629928315, "points": [[0.0, 1.0], [0.0, 0.0], [0.0, 0.0], [0.333333333333, 0.25], [0.416666666667, 0.161290322581], [0.75, 0.12], [1.0, 0.055555555556]] }, "k-NN SA|14": { "auc": 0.366984890542, "points": [[0.0, 1.0], [0.0, 0.0], [0.333333333333, 0.5], [0.583333333333, 0.5], [0.75, 0.473684210526], [0.833333333333, 0.357142857143], [0.916666666667, 0.354838709677], [0.916666666667, 0.305555555556], [0.916666666667, 0.261904761905], [1.0, 0.055555555556]] }, "k-NN SA|15": { "auc": 0.544346978558, "points": [[0.0, 1.0], [0.083333333333, 1.0], [0.333333333333, 0.666666666667], [0.5, 0.666666666667], [0.583333333333, 0.388888888889], [0.666666666667, 0.222222222222], [1.0, 0.210526315789], [1.0, 0.055555555556]] }, "k-NN SA|16": { "auc": 0.802657872501, "points": [[0.0, 1.0], [0.083333333333, 1.0], [0.333333333333, 1.0], [0.416666666667, 1.0], [0.583333333333, 0.636363636364], [0.666666666667, 0.666666666667], [0.833333333333, 0.714285714286], [0.916666666667, 0.478260869565], [1.0, 0.255319148936], [1.0, 0.055555555556]] }, "k-NN SA|17": { "auc": 0.660750287427, "points": [[0.0, 1.0], [0.333333333333, 0.8], [0.583333333333, 0.636363636364], [0.583333333333, 0.583333333333], [0.833333333333, 0.666666666667], [0.833333333333, 0.625], [0.833333333333, 0.243902439024], [1.0, 0.055555555556]] }, "k-NN SA|18": { "auc": 0.074290045418, "points": [[0.0, 1.0], [0.0, 0.0], [0.083333333333, 0.142857142857], [0.166666666667, 0.1], [0.583333333333, 0.061946902655], [1.0, 0.055555555556]] }, "k-NN Yang|1": { "auc": 0.801130582381, "points": [[0.0, 1.0], [0.25, 0.75], [0.416666666667, 0.833333333333], [0.583333333333, 0.875], [0.75, 0.818181818182], [0.833333333333, 0.769230769231], [0.916666666667, 0.611111111111], [1.0, 0.428571428571], [1.0, 0.260869565217], [1.0, 0.055555555556]] }, "k-NN Yang|2": { "auc": 0.832954950142, "points": [[0.0, 1.0], [0.416666666667, 1.0], [0.583333333333, 0.875], [0.666666666667, 0.888888888889], [0.75, 0.692307692308], [0.75, 0.5625], [0.833333333333, 0.5], [0.916666666667, 0.5], [1.0, 0.333333333333], [1.0, 0.055555555556]] }, "k-NN Yang|3": { "auc": 0.565869218501, "points": [[0.0, 1.0], [0.083333333333, 0.5], [0.5, 0.545454545455], [0.833333333333, 0.625], [0.833333333333, 0.555555555556], [0.833333333333, 0.526315789474], [0.916666666667, 0.55], [1.0, 0.545454545455], [1.0, 0.5], [1.0, 0.444444444444], [1.0, 0.055555555556]] }, "k-NN Yang|4": { "auc": 0.384719883633, "points": [[0.0, 1.0], [0.0, 0.0], [0.5, 0.545454545455], [0.75, 0.5625], [0.833333333333, 0.555555555556], [0.833333333333, 0.434782608696], [0.916666666667, 0.392857142857], [0.916666666667, 0.366666666667], [1.0, 0.324324324324], [1.0, 0.055555555556]] }, "k-NN Yang|5": { "auc": 0.936511149669, "points": [[0.0, 1.0], [0.083333333333, 1.0], [0.5, 1.0], [0.666666666667, 0.888888888889], [0.75, 0.9], [0.916666666667, 0.846153846154], [0.916666666667, 0.785714285714], [1.0, 0.631578947368], [1.0, 0.6], [1.0, 0.428571428571], [1.0, 0.307692307692], [1.0, 0.055555555556]] }, "k-NN Yang|6": { "auc": 0.996794871795, "points": [[0.0, 1.0], [0.333333333333, 1.0], [0.666666666667, 1.0], [0.75, 1.0], [0.833333333333, 1.0], [0.916666666667, 1.0], [1.0, 0.923076923077], [1.0, 0.8], [1.0, 0.75], [1.0, 0.631578947368], [1.0, 0.055555555556]] }, "k-NN Yang|7": { "auc": 0.434420289855, "points": [[0.0, 1.0], [0.083333333333, 0.5], [0.25, 0.6], [0.5, 0.4], [0.583333333333, 0.304347826087], [1.0, 0.3], [1.0, 0.255319148936], [1.0, 0.235294117647], [1.0, 0.055555555556]] }, "k-NN Yang|8": { "auc": 0.719839015152, "points": [[0.0, 1.0], [0.083333333333, 1.0], [0.25, 1.0], [0.5, 0.6], [0.75, 0.5625], [0.916666666667, 0.5], [1.0, 0.363636363636], [1.0, 0.315789473684], [1.0, 0.055555555556]] }, "k-NN Yang|9": { "auc": 0.348077915377, "points": [[0.0, 1.0], [0.0, 0.0], [0.0, 0.0], [0.25, 0.5], [0.583333333333, 0.368421052632], [0.666666666667, 0.32], [1.0, 0.352941176471], [1.0, 0.244897959184], [1.0, 0.055555555556]] }, "k-NN Yang|10": { "auc": 0.515833333333, "points": [[0.0, 1.0], [0.083333333333, 0.5], [0.5, 0.5], [1.0, 0.48], [1.0, 0.4], [1.0, 0.324324324324], [1.0, 0.244897959184], [1.0, 0.055555555556]] }, "k-NN Yang|11": { "auc": 1.0, "points": [[0.0, 1.0], [0.75, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.857142857143], [1.0, 0.8], [1.0, 0.6], [1.0, 0.5], [1.0, 0.055555555556]] }, "k-NN Yang|12": { "auc": 0.902031302031, "points": [[0.0, 1.0], [0.166666666667, 1.0], [0.5, 0.857142857143], [0.833333333333, 0.909090909091], [0.916666666667, 0.846153846154], [0.916666666667, 0.733333333333], [1.0, 0.666666666667], [1.0, 0.631578947368], [1.0, 0.5], [1.0, 0.428571428571], [1.0, 0.352941176471], [1.0, 0.055555555556]] }, "k-NN Yang|13": { "auc": 0.688881107999, "points": [[0.0, 1.0], [0.166666666667, 1.0], [0.25, 1.0], [0.416666666667, 1.0], [0.416666666667, 0.714285714286], [0.583333333333, 0.411764705882], [1.0, 0.444444444444], [1.0, 0.315789473684], [1.0, 0.055555555556]] }, "k-NN Yang|14": { "auc": 0.868614130435, "points": [[0.0, 1.0], [0.083333333333, 1.0], [0.333333333333, 0.8], [0.583333333333, 0.875], [0.916666666667, 0.916666666667], [0.916666666667, 0.733333333333], [1.0, 0.521739130435], [1.0, 0.324324324324], [1.0, 0.055555555556]] }, "k-NN Yang|15": { "auc": 0.342944820205, "points": [[0.0, 1.0], [0.166666666667, 0.285714285714], [0.416666666667, 0.294117647059], [0.666666666667, 0.266666666667], [1.0, 0.292682926829], [1.0, 0.196721311475], [1.0, 0.055555555556]] }, "k-NN Yang|16": { "auc": 0.662421924718, "points": [[0.0, 1.0], [0.083333333333, 1.0], [0.25, 0.6], [0.416666666667, 0.714285714286], [0.583333333333, 0.636363636364], [0.833333333333, 0.526315789474], [1.0, 0.413793103448], [1.0, 0.307692307692], [1.0, 0.285714285714], [1.0, 0.055555555556]] }, "k-NN Yang|17": { "auc": 0.765400202634, "points": [[0.0, 1.0], [0.5, 1.0], [0.5, 0.857142857143], [0.666666666667, 0.666666666667], [0.666666666667, 0.533333333333], [0.916666666667, 0.366666666667], [1.0, 0.255319148936], [1.0, 0.055555555556]] }, "k-NN Yang|18": { "auc": 0.620766204045, "points": [[0.0, 1.0], [0.083333333333, 1.0], [0.25, 1.0], [0.5, 0.6], [0.583333333333, 0.538461538462], [0.583333333333, 0.411764705882], [0.75, 0.391304347826], [0.916666666667, 0.171875], [1.0, 0.055555555556]] }, "k-NN Zernike7|1": { "auc": 0.991666666667, "points": [[0.0, 1.0], [0.166666666667, 1.0], [0.333333333333, 1.0], [0.5, 1.0], [0.666666666667, 1.0], [0.833333333333, 1.0], [0.916666666667, 1.0], [1.0, 0.8], [1.0, 0.333333333333], [1.0, 0.055555555556]] }, "k-NN Zernike7|2": { "auc": 1.0, "points": [[0.0, 1.0], [0.75, 1.0], [0.916666666667, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.055555555556]] }, "k-NN Zernike7|3": { "auc": 0.996794871795, "points": [[0.0, 1.0], [0.166666666667, 1.0], [0.25, 1.0], [0.583333333333, 1.0], [0.75, 1.0], [0.916666666667, 1.0], [1.0, 0.923076923077], [1.0, 0.307692307692], [1.0, 0.055555555556]] }, "k-NN Zernike7|4": { "auc": 0.893084066471, "points": [[0.0, 1.0], [0.083333333333, 1.0], [0.166666666667, 1.0], [0.416666666667, 1.0], [0.666666666667, 1.0], [0.75, 0.818181818182], [1.0, 0.387096774194], [1.0, 0.222222222222], [1.0, 0.055555555556]] }, "k-NN Zernike7|5": { "auc": 1.0, "points": [[0.0, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.75], [1.0, 0.6], [1.0, 0.571428571429], [1.0, 0.461538461538], [1.0, 0.055555555556]] }, "k-NN Zernike7|6": { "auc": 1.0, "points": [[0.0, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.857142857143], [1.0, 0.055555555556]] }, "k-NN Zernike7|7": { "auc": 1.0, "points": [[0.0, 1.0], [0.916666666667, 1.0], [1.0, 1.0], [1.0, 0.8], [1.0, 0.75], [1.0, 0.631578947368], [1.0, 0.6], [1.0, 0.571428571429], [1.0, 0.428571428571], [1.0, 0.3], [1.0, 0.055555555556]] }, "k-NN Zernike7|8": { "auc": 0.881682286833, "points": [[0.0, 1.0], [0.166666666667, 1.0], [0.416666666667, 1.0], [0.666666666667, 0.8], [0.75, 0.818181818182], [0.833333333333, 0.833333333333], [0.916666666667, 0.785714285714], [0.916666666667, 0.733333333333], [0.916666666667, 0.6875], [0.916666666667, 0.578947368421], [1.0, 0.292682926829], [1.0, 0.055555555556]] }, "k-NN Zernike7|9": { "auc": 1.0, "points": [[0.0, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.857142857143], [1.0, 0.705882352941], [1.0, 0.666666666667], [1.0, 0.6], [1.0, 0.055555555556]] }, "k-NN Zernike7|10": { "auc": 0.722846489023, "points": [[0.0, 1.0], [0.416666666667, 1.0], [0.666666666667, 0.470588235294], [0.916666666667, 0.423076923077], [0.916666666667, 0.2], [1.0, 0.055555555556]] }, "k-NN Zernike7|11": { "auc": 1.0, "points": [[0.0, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.857142857143], [1.0, 0.8], [1.0, 0.75], [1.0, 0.705882352941], [1.0, 0.055555555556]] }, "k-NN Zernike7|12": { "auc": 1.0, "points": [[0.0, 1.0], [0.916666666667, 1.0], [1.0, 1.0], [1.0, 0.055555555556]] }, "k-NN Zernike7|13": { "auc": 0.983974358974, "points": [[0.0, 1.0], [0.5, 1.0], [0.583333333333, 1.0], [1.0, 0.923076923077], [1.0, 0.055555555556]] }, "k-NN Zernike7|14": { "auc": 0.920082001332, "points": [[0.0, 1.0], [0.25, 1.0], [0.583333333333, 0.875], [0.75, 0.9], [0.75, 0.818181818182], [0.916666666667, 0.846153846154], [1.0, 0.857142857143], [1.0, 0.75], [1.0, 0.6], [1.0, 0.5], [1.0, 0.444444444444], [1.0, 0.055555555556]] }, "k-NN Zernike7|15": { "auc": 0.4, "points": [[0.0, 1.0], [0.0, 0.0], [1.0, 0.8], [1.0, 0.705882352941], [1.0, 0.666666666667], [1.0, 0.631578947368], [1.0, 0.6], [1.0, 0.5], [1.0, 0.461538461538], [1.0, 0.413793103448], [1.0, 0.387096774194], [1.0, 0.055555555556]] }, "k-NN Zernike7|16": { "auc": 0.848708811291, "points": [[0.0, 1.0], [0.083333333333, 1.0], [0.416666666667, 0.833333333333], [0.75, 0.9], [0.833333333333, 0.769230769231], [0.833333333333, 0.666666666667], [0.916666666667, 0.6875], [0.916666666667, 0.578947368421], [1.0, 0.5], [1.0, 0.428571428571], [1.0, 0.375], [1.0, 0.055555555556]] }, "k-NN Zernike7|17": { "auc": 0.964102564103, "points": [[0.0, 1.0], [0.833333333333, 1.0], [0.833333333333, 0.909090909091], [0.833333333333, 0.769230769231], [1.0, 0.8], [1.0, 0.666666666667], [1.0, 0.055555555556]] }, "k-NN Zernike7|18": { "auc": 0.947420634921, "points": [[0.0, 1.0], [0.083333333333, 1.0], [0.5, 1.0], [0.666666666667, 1.0], [0.833333333333, 0.833333333333], [0.916666666667, 0.785714285714], [1.0, 0.666666666667], [1.0, 0.631578947368], [1.0, 0.571428571429], [1.0, 0.521739130435], [1.0, 0.352941176471], [1.0, 0.055555555556]] }, "Majority vote|1": { "auc": 0.942791005291, "points": [[0.0, 1.0], [0.166666666667, 1.0], [0.666666666667, 1.0], [0.75, 1.0], [0.833333333333, 1.0], [0.916666666667, 0.785714285714], [1.0, 0.055555555556]] }, "Majority vote|2": { "auc": 1.0, "points": [[0.0, 1.0], [0.75, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.545454545455], [1.0, 0.055555555556]] }, "Majority vote|3": { "auc": 0.976600241546, "points": [[0.0, 1.0], [0.75, 1.0], [0.916666666667, 1.0], [0.916666666667, 0.916666666667], [1.0, 0.521739130435], [1.0, 0.055555555556]] }, "Majority vote|4": { "auc": 0.964781746032, "points": [[0.0, 1.0], [0.166666666667, 1.0], [0.583333333333, 1.0], [0.916666666667, 0.916666666667], [1.0, 0.571428571429], [1.0, 0.055555555556]] }, "Majority vote|5": { "auc": 0.996794871795, "points": [[0.0, 1.0], [0.916666666667, 1.0], [1.0, 0.923076923077], [1.0, 0.857142857143], [1.0, 0.387096774194], [1.0, 0.055555555556]] }, "Majority vote|6": { "auc": 1.0, "points": [[0.0, 1.0], [0.75, 1.0], [1.0, 1.0], [1.0, 0.857142857143], [1.0, 0.055555555556]] }, "Majority vote|7": { "auc": 0.948717948718, "points": [[0.0, 1.0], [0.166666666667, 1.0], [0.75, 0.9], [1.0, 0.923076923077], [1.0, 0.8], [1.0, 0.413793103448], [1.0, 0.055555555556]] }, "Majority vote|8": { "auc": 0.892647058824, "points": [[0.0, 1.0], [0.333333333333, 1.0], [0.416666666667, 1.0], [0.666666666667, 0.8], [1.0, 0.705882352941], [1.0, 0.413793103448], [1.0, 0.055555555556]] }, "Majority vote|9": { "auc": 1.0, "points": [[0.0, 1.0], [0.416666666667, 1.0], [1.0, 1.0], [1.0, 0.923076923077], [1.0, 0.571428571429], [1.0, 0.055555555556]] }, "Majority vote|10": { "auc": 0.920897190294, "points": [[0.0, 1.0], [0.25, 1.0], [0.583333333333, 1.0], [0.916666666667, 0.916666666667], [0.916666666667, 0.379310344828], [1.0, 0.055555555556]] }, "Majority vote|11": { "auc": 1.0, "points": [[0.0, 1.0], [1.0, 1.0], [1.0, 0.631578947368], [1.0, 0.055555555556]] }, "Majority vote|12": { "auc": 1.0, "points": [[0.0, 1.0], [0.916666666667, 1.0], [1.0, 1.0], [1.0, 0.705882352941], [1.0, 0.055555555556]] }, "Majority vote|13": { "auc": 0.831228956229, "points": [[0.0, 1.0], [0.166666666667, 1.0], [0.333333333333, 1.0], [0.583333333333, 0.777777777778], [1.0, 0.545454545455], [1.0, 0.055555555556]] }, "Majority vote|14": { "auc": 0.987103174603, "points": [[0.0, 1.0], [0.5, 1.0], [0.833333333333, 1.0], [0.916666666667, 0.916666666667], [1.0, 0.857142857143], [1.0, 0.4], [1.0, 0.055555555556]] }, "Majority vote|15": { "auc": 0.95860042735, "points": [[0.0, 1.0], [0.083333333333, 1.0], [0.916666666667, 0.916666666667], [1.0, 0.923076923077], [1.0, 0.705882352941], [1.0, 0.387096774194], [1.0, 0.055555555556]] }, "Majority vote|16": { "auc": 0.919678248483, "points": [[0.0, 1.0], [0.416666666667, 1.0], [0.666666666667, 1.0], [0.916666666667, 0.846153846154], [0.916666666667, 0.733333333333], [0.916666666667, 0.478260869565], [1.0, 0.055555555556]] }, "Majority vote|17": { "auc": 0.977704678363, "points": [[0.0, 1.0], [0.416666666667, 1.0], [0.666666666667, 1.0], [0.833333333333, 1.0], [0.916666666667, 0.916666666667], [1.0, 0.631578947368], [1.0, 0.055555555556]] }, "Majority vote|18": { "auc": 0.949175824176, "points": [[0.0, 1.0], [0.416666666667, 1.0], [0.916666666667, 0.846153846154], [1.0, 0.857142857143], [1.0, 0.631578947368], [1.0, 0.055555555556]] } }, colors = { "k-NN ART": "#22669A", "k-NN GFD": "#16816B", "k-NN SA": "#C07A35", "k-NN Yang": "#B75565", "k-NN Zernike7": "#7865B0", "Majority vote": "#20394A" }, short = { "k-NN ART": "ART", "k-NN GFD": "GFD", "k-NN SA": "SA", "k-NN Yang": "Yang", "k-NN Zernike7": "Zernike7", "Majority vote": "Majority vote" }, methods = ["k-NN ART", "k-NN GFD", "k-NN SA", "k-NN Yang", "k-NN Zernike7", "Majority vote"];
+        const selected = new Set(methods); let activeClass = 1;
+        const classButtons = document.getElementById('class-buttons');
+        for (let c = 1; c <= 18; c++) { const b = document.createElement('button'); b.type = 'button'; b.textContent = 'C' + c; b.dataset.cls = c; b.setAttribute('aria-pressed', String(c === activeClass)); b.addEventListener('click', () => { activeClass = c; Array.from(classButtons.children).forEach(item => item.setAttribute('aria-pressed', String(item === b))); update() }); classButtons.appendChild(b) }
+        const controls = document.getElementById('method-controls');
+        methods.forEach(m => { const label = document.createElement('label'), check = document.createElement('input'); check.type = 'checkbox'; check.checked = true; check.setAttribute('aria-label', 'Show ' + short[m]); check.addEventListener('change', () => { check.checked ? selected.add(m) : selected.delete(m); update() }); const dot = document.createElement('i'); dot.style.background = colors[m]; label.appendChild(check); label.appendChild(dot); label.appendChild(document.createTextNode(short[m])); controls.appendChild(label) });
+        function makeGraph(cls) {
+            const W = 932, H = 352, x0 = 61, y0 = 18, w = 838, h = 274; let s = `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Precision–recall curves for class ${cls}"><rect width="${W}" height="${H}" fill="#fff"/>`;
+            for (let i = 0; i <= 5; i++) { const t = i / 5, x = x0 + w * t, y = y0 + (1 - t) * h; s += `<line x1="${x}" y1="${y0}" x2="${x}" y2="${y0 + h}" stroke="#e4ebee"/><line x1="${x0}" y1="${y}" x2="${x0 + w}" y2="${y}" stroke="#e4ebee"/><text x="${x}" y="${y0 + h + 22}" text-anchor="middle" fill="#607281" font-size="13">${t.toFixed(1)}</text><text x="${x0 - 11}" y="${y + 4}" text-anchor="end" fill="#607281" font-size="13">${t.toFixed(1)}</text>` }
+            s += `<path d="M${x0},${y0}V${y0 + h}H${x0 + w}" fill="none" stroke="#8fa2ac" stroke-width="1.2"/><text x="${x0 + w / 2}" y="${H - 7}" text-anchor="middle" fill="#334b5c" font-size="15" font-weight="600">Recall</text><text x="19" y="${y0 + h / 2}" transform="rotate(-90 19 ${y0 + h / 2})" text-anchor="middle" fill="#334b5c" font-size="15" font-weight="600">Precision</text>`;
+            methods.filter(m => selected.has(m)).forEach(m => { const points = curves[m + '|' + cls].points, coords = points.map(([r, p]) => (x0 + r * w).toFixed(2) + ',' + (y0 + (1 - p) * h).toFixed(2)).join(' '); s += `<polyline points="${coords}" stroke="${colors[m]}" stroke-width="${m === 'Majority vote' ? 4 : 2.7}" ${m === 'Majority vote' ? 'stroke-dasharray="10 5"' : ''} fill="none" stroke-linejoin="round" stroke-linecap="round"/>`; points.forEach(([r, p]) => s += `<circle cx="${(x0 + r * w).toFixed(2)}" cy="${(y0 + (1 - p) * h).toFixed(2)}" r="2.5" fill="${colors[m]}" stroke="white" stroke-width=".6"/>`) }); return s + '</svg>'
+        }
+        function update() { document.getElementById('interactive-plot').innerHTML = makeGraph(activeClass); document.getElementById('interactive-heading').textContent = 'Class ' + activeClass + ' — selected methods'; const legend = document.getElementById('interactive-legend'); legend.textContent = ''; methods.filter(m => selected.has(m)).forEach(m => { const e = document.createElement('span'); e.className = 'legend-entry'; const dot = document.createElement('i'); dot.style.background = colors[m]; e.appendChild(dot); const b = document.createElement('b'); b.textContent = short[m]; e.appendChild(b); const v = document.createElement('span'); v.textContent = ' AUC ' + curves[m + '|' + activeClass].auc.toFixed(6); e.appendChild(v); legend.appendChild(e) }) }
+        update();
+    </script>
+</body>
+
+</html>

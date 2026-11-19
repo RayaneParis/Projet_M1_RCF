@@ -237,8 +237,8 @@ void runExperiments(const std::vector<Sample>& data) {
     std::cout << data.size() << " samples loaded\n";
     std::cout << "all samples have the expected descriptor dimensions\n";
 
-    const KnnPredictions knn = runKNN(data);
-    // runKMeans(data);
+    // const KnnPredictions knn = runKNN(data);
+    runKMeans(data);
     // const PredictionsBySetting voting = runVoting(knn);
     // runSVM(data);
     // runEvaluation(knn, voting);

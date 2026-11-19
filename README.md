@@ -7,21 +7,23 @@ We compare different shape recognition methods using the **SharvitB2 dataset**, 
 
 The project is implemented in **C++17** and includes:
 
+```text
 Partie du projet	                                                    État
-1. Lecture des données	                                                Implémentée
+1. Lecture des données	                                                Implemented
 2. 
-    - euclidean (L2) distance                                           Implémentée
-    - manhattan (L1) distance                                           Implémentée
-2.a. k-Nearest Neighbors (k-NN)	                                        Implémenté
-2.b. k-Means Clustering	                                                Implémenté
-2.c. Majority Voting across five feature descriptors	                Implémenté
-2.d. Support Vector Machine (SVM, RBF kernel) | OpenCV (`cv::ml::SVM`) 	Implémenté
+    - euclidean (L2) distance                                           Implemented
+    - manhattan (L1) distance                                           Implemented
+2.a. k-Nearest Neighbors (k-NN)	                                        Implemented
+2.b. k-Means Clustering	                                                Implemented
+2.c. Majority Voting across five feature descriptors	                Implemented
+2.d. Support Vector Machine (SVM, RBF kernel) | OpenCV (`cv::ml::SVM`) 	Implemented
 3. tests et evaluation:
-3.a. Protocole LOO	                                                    Implémenté
-3.b. Métriques d'évaluation	                                            Implémentées
-3.c. Précision/rappel et AUC	            Calculs implémentés, graphiques à vérifier
-4. Étude expérimentale	                                    À reprendre méthodiquement
-5. Conclusion et perspectives	                        À rédiger à partir des résultats
+3.a. Protocole LOO	                                                    Implemented
+3.b. Métriques d'évaluation	                                            Implemented
+3.c. Précision/rappel et AUC	                                        Implemented
+4. Étude expérimentale	                                            À reprendre méthodiquement
+5. Conclusion et perspectives	                                    À rédiger à partir des résultats
+```
 
 ## Dataset
 
@@ -65,6 +67,7 @@ include/       C++ header files
 src/           C++ source files
 data/          Local dataset
 docs/          Report, slides
+results/       experiments
 CMakeLists.txt Build configuration
 ```
 
