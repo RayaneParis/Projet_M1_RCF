@@ -1,0 +1,9 @@
+144 samples loaded
+all samples have the expected descriptor dimensions
+
+======================= 2.d. SVM classification (leave-one-out) =======================
+ART | SVM RBF | correct: 138/144 | recognition rate: 95.8333%
+GFD | SVM RBF | correct: 130/144 | recognition rate: 90.2778%
+SA | SVM RBF | correct: 87/144 | recognition rate: 60.4167%
+Yang | SVM RBF | correct: 132/144 | recognition rate: 91.6667%
+Zernike7 | SVM RBF | correct: 140/144 | recognition rate: 97.2222%
