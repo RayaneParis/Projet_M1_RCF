@@ -7,3 +7,4 @@ ProjetM1RF2026.pdf
 docs/*
 !docs/*.pdf
 !docs/*.docx
+!docs/*.pages
